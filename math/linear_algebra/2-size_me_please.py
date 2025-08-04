@@ -11,5 +11,5 @@ def matrix_shape(matrix):
         if not matrix:
             break
         matrix = matrix[0]
-    
+
     return shape
