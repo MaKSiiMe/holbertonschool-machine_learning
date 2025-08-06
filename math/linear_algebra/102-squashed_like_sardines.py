@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""Module to concatenate two matrices along a specified axis."""
 
 
 def cat_matrices(mat1, mat2, axis=0):
@@ -8,6 +9,8 @@ def cat_matrices(mat1, mat2, axis=0):
         return None
 
     if axis == 0:
+        if any(len(row) != len(mat1[0]) for row in mat1 + mat2):
+            return None
         return mat1 + mat2
 
     if len(mat1) == 0 or len(mat2) == 0:
