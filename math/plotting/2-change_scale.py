@@ -16,7 +16,7 @@ def change_scale():
     plt.ylabel("Fraction Remaining")
     plt.title("Exponential Decay of C-14")
     plt.xlim(0, 28650)
-    plt.plot(x, y, color='blue')
+    plt.plot(x, y)
     plt.yscale("log")
     plt.savefig("scale.png")
     plt.show()

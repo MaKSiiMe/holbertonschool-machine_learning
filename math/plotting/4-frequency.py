@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
+"""Module for plot the frequency of student grades."""
 import numpy as np
 import matplotlib.pyplot as plt
 
-def frequency():
 
+def frequency():
+    """Function to plot the frequency of student grades."""
     np.random.seed(5)
     student_grades = np.random.normal(68, 15, 50)
     plt.figure(figsize=(6.4, 4.8))
