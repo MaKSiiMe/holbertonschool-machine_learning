@@ -30,21 +30,6 @@ class Node:
         self.is_root = is_root
         self.is_leaf = False
 
-    def __str__(self):
-        root_line = f"[feature={self.feature}, threshold={self.threshold}]"
-        if not self.left_child and not self.right_child:
-            return root_line
-        parts = [root_line]
-        if self.left_child:
-            parts.append(
-                left_child_add_prefix(str(self.left_child)).rstrip("\n")
-            )
-        if self.right_child:
-            parts.append(
-                right_child_add_prefix(str(self.right_child)).rstrip("\n")
-            )
-        return "\n".join(parts)
-
     def get_leaves_below(self):
         """Get all leaves below this node (inclusive)"""
         leaves = []
@@ -61,26 +46,8 @@ class Decision_Tree:
         self.root = root
 
     def __str__(self):
-        return self.root.__str__()
+        return f"Decision_Tree(n_leaves={len(self.get_leaves())})"
 
     def get_leaves(self):
         """Get all leaves in the decision tree"""
         return self.root.get_leaves_below()
-
-
-def left_child_add_prefix(text):
-    """Add a prefix to the left child representation"""
-    lines = text.split("\n")
-    new_text = "    +--" + lines[0] + "\n"
-    for x in lines[1:]:
-        new_text += ("    |  " + x) + "\n"
-    return new_text
-
-
-def right_child_add_prefix(text):
-    """Add a prefix to the right child representation"""
-    lines = text.split("\n")
-    new_text = "    \\--" + lines[0] + "\n"
-    for x in lines[1:]:
-        new_text += ("       " + x) + "\n"
-    return new_text

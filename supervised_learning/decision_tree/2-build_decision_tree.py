@@ -11,7 +11,7 @@ class Leaf:
         self.is_leaf = True
 
     def __str__(self):
-        return (f"-> leaf [value={self.value}]")
+        return f"leaf [value={self.value}]"
 
 
 class Node:
@@ -27,7 +27,10 @@ class Node:
         self.is_leaf = False
 
     def __str__(self):
-        root_line = f"[feature={self.feature}, threshold={self.threshold}]"
+        label = "root" if self.is_root else "node"
+        root_line = (
+            f"{label} [feature={self.feature}, threshold={self.threshold}]"
+        )
         if not self.left_child and not self.right_child:
             return root_line
         parts = [root_line]
@@ -54,16 +57,16 @@ class Decision_Tree:
 def left_child_add_prefix(text):
     """Add a prefix to the left child representation"""
     lines = text.split("\n")
-    new_text = "    +--" + lines[0] + "\n"
+    new_text = "    +---> " + lines[0] + "\n"
     for x in lines[1:]:
-        new_text += ("    |  " + x) + "\n"
+        new_text += ("    |      " + x) + "\n"
     return new_text
 
 
 def right_child_add_prefix(text):
     """Add a prefix to the right child representation"""
     lines = text.split("\n")
-    new_text = "    +--" + lines[0] + "\n"
+    new_text = "    +---> " + lines[0] + "\n"
     for x in lines[1:]:
-        new_text += ("       " + x) + "\n"
+        new_text += ("           " + x) + "\n"
     return new_text
