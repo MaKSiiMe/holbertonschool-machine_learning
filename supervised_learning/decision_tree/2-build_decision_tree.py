@@ -1,4 +1,9 @@
+#!/usr/bin/env python3
+"""Module for building a decision tree"""
+
+
 class Leaf:
+    """Class representing a leaf node in the decision tree"""
     def __init__(self, value, depth=0, is_root=False):
         self.value = value
         self.depth = depth
@@ -10,7 +15,9 @@ class Leaf:
 
 
 class Node:
-    def __init__(self, feature, threshold, left_child=None, right_child=None, depth=0, is_root=False):
+    """Class representing a node in the decision tree"""
+    def __init__(self, feature, threshold, left_child=None,
+                 right_child=None, depth=0, is_root=False):
         self.feature = feature
         self.threshold = threshold
         self.left_child = left_child
@@ -25,13 +32,18 @@ class Node:
             return root_line
         parts = [root_line]
         if self.left_child:
-            parts.append(left_child_add_prefix(str(self.left_child)).rstrip("\n"))
+            parts.append(
+                left_child_add_prefix(str(self.left_child)).rstrip("\n")
+            )
         if self.right_child:
-            parts.append(right_child_add_prefix(str(self.right_child)).rstrip("\n"))
+            parts.append(
+                right_child_add_prefix(str(self.right_child)).rstrip("\n")
+            )
         return "\n".join(parts)
 
 
 class Decision_Tree:
+    """Class representing a decision tree"""
     def __init__(self, root):
         self.root = root
 
@@ -40,6 +52,7 @@ class Decision_Tree:
 
 
 def left_child_add_prefix(text):
+    """Add a prefix to the left child representation"""
     lines = text.split("\n")
     new_text = "    +--" + lines[0] + "\n"
     for x in lines[1:]:
@@ -48,6 +61,7 @@ def left_child_add_prefix(text):
 
 
 def right_child_add_prefix(text):
+    """Add a prefix to the right child representation"""
     lines = text.split("\n")
     new_text = "    +--" + lines[0] + "\n"
     for x in lines[1:]:

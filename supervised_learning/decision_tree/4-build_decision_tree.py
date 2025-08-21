@@ -1,6 +1,10 @@
+#!/usr/bin/env python3
+"""Module for building a decision tree"""
 import numpy as np
 
+
 class Leaf:
+    """Class representing a leaf node in the decision tree"""
     def __init__(self, value, depth=0, is_root=False):
         self.value = value
         self.depth = depth
@@ -11,13 +15,16 @@ class Leaf:
         return f"-> leaf [value={self.value}]"
 
     def get_leaves_below(self):
+        """Get all leaves below this leaf (inclusive)"""
         return [self]
 
     def update_bounds_below(self):
+        """Update the bounds for all leaves below this leaf"""
         pass
 
 
 class Node:
+    """Class representing a node in the decision tree"""
     def __init__(self, feature, threshold, left_child=None, right_child=None, depth=0, is_root=False):
         self.feature = feature
         self.threshold = threshold
@@ -39,6 +46,7 @@ class Node:
         return "\n".join(parts)
 
     def get_leaves_below(self):
+        """Get all leaves below this node (inclusive)"""
         leaves = []
         if self.left_child:
             leaves.extend(self.left_child.get_leaves_below())
@@ -47,6 +55,7 @@ class Node:
         return leaves
 
     def update_bounds_below(self):
+        """Update the bounds for all leaves below this node"""
         if self.is_root:
             self.upper = {0: np.inf}
             self.lower = {0: -1 * np.inf}
@@ -69,6 +78,7 @@ class Node:
 
 
 class Decision_Tree:
+    """Class representing a decision tree"""
     def __init__(self, root):
         self.root = root
 
@@ -76,13 +86,16 @@ class Decision_Tree:
         return self.root.__str__()
 
     def get_leaves(self):
+        """Get all leaves in the decision tree"""
         return self.root.get_leaves_below()
 
     def update_bounds(self):
+        """Update the bounds for all leaves in the decision tree"""
         self.root.update_bounds_below()
 
 
 def left_child_add_prefix(text):
+    """Add a prefix to the left child representation"""
     lines = text.split("\n")
     new_text = "    +--" + lines[0] + "\n"
     for x in lines[1:]:
@@ -91,6 +104,7 @@ def left_child_add_prefix(text):
 
 
 def right_child_add_prefix(text):
+    """Add a prefix to the right child representation"""
     lines = text.split("\n")
     new_text = "    \\--" + lines[0] + "\n"
     for x in lines[1:]:
