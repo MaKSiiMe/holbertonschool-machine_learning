@@ -25,7 +25,10 @@ class Leaf:
 
 class Node:
     """Class representing a node in the decision tree"""
-    def __init__(self, feature, threshold, left_child=None, right_child=None, depth=0, is_root=False):
+    def __init__(
+        self, feature, threshold, *, left_child=None,
+        right_child=None, depth=0, is_root=False
+    ):
         self.feature = feature
         self.threshold = threshold
         self.left_child = left_child
@@ -40,9 +43,13 @@ class Node:
             return root_line
         parts = [root_line]
         if self.left_child:
-            parts.append(left_child_add_prefix(str(self.left_child)).rstrip("\n"))
+            parts.append(
+                left_child_add_prefix(str(self.left_child)).rstrip("\n")
+            )
         if self.right_child:
-            parts.append(right_child_add_prefix(str(self.right_child)).rstrip("\n"))
+            parts.append(
+                right_child_add_prefix(str(self.right_child)).rstrip("\n")
+            )
         return "\n".join(parts)
 
     def get_leaves_below(self):
@@ -55,26 +62,31 @@ class Node:
         return leaves
 
     def update_bounds_below(self):
-        """Update the bounds for all leaves below this node"""
+        """Update the bounds (lower / upper dicts) below this node"""
         if self.is_root:
-            self.upper = {0: np.inf}
-            self.lower = {0: -1 * np.inf}
-        if not hasattr(self, 'upper'):
-            self.upper = {}
-        if not hasattr(self, 'lower'):
             self.lower = {}
-        for child in [self.left_child, self.right_child]:
-            if child is None:
-                continue
-            child.lower = dict(self.lower)
-            child.upper = dict(self.upper)
-            if child is self.left_child:
-                child.upper[self.feature] = min(child.upper.get(self.feature, np.inf), self.threshold)
-            else:
-                child.lower[self.feature] = max(child.lower.get(self.feature, -np.inf), self.threshold)
-        for child in [self.left_child, self.right_child]:
-            if child is not None:
-                child.update_bounds_below()
+            self.upper = {}
+        else:
+            if not hasattr(self, 'lower'):
+                self.lower = {}
+            if not hasattr(self, 'upper'):
+                self.upper = {}
+
+        if self.left_child is not None:
+            self.left_child.lower = dict(self.lower)
+            self.left_child.upper = dict(self.upper)
+            self.left_child.lower[self.feature] = self.threshold
+        if self.right_child is not None:
+            self.right_child.lower = dict(self.lower)
+            self.right_child.upper = dict(self.upper)
+            self.right_child.upper[self.feature] = self.threshold
+            if self.is_root and self.feature not in self.right_child.lower:
+                self.right_child.lower[self.feature] = -np.inf
+
+        if self.left_child is not None and not self.left_child.is_leaf:
+            self.left_child.update_bounds_below()
+        if self.right_child is not None and not self.right_child.is_leaf:
+            self.right_child.update_bounds_below()
 
 
 class Decision_Tree:
@@ -92,6 +104,14 @@ class Decision_Tree:
     def update_bounds(self):
         """Update the bounds for all leaves in the decision tree"""
         self.root.update_bounds_below()
+        for leaf in self.get_leaves():
+            if not hasattr(leaf, 'lower'):
+                leaf.lower = {}
+            if not hasattr(leaf, 'upper'):
+                leaf.upper = {}
+            for f in list(leaf.lower.keys()):
+                if f not in leaf.upper:
+                    leaf.upper[f] = np.inf
 
 
 def left_child_add_prefix(text):
