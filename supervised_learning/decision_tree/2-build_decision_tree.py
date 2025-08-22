@@ -32,7 +32,7 @@ class Node:
             parts.append(
                 right_child_add_prefix(str(self.right_child)).rstrip("\n")
             )
-        return "\n".join(parts)
+        return "\n".join(parts)+"\n"
 
     def max_depth_below(self):
         """Calculate the maximum depth of the subtree rooted at this node"""
