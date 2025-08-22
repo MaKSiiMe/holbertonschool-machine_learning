@@ -32,7 +32,7 @@ class Node:
             parts.append(
                 right_child_add_prefix(str(self.right_child)).rstrip("\n")
             )
-        return "\n".join(parts)+"\n"
+        return "\n".join(parts)
 
     def max_depth_below(self):
         """Calculate the maximum depth of the subtree rooted at this node"""
@@ -93,7 +93,7 @@ class Decision_Tree:
         self.root = root
 
     def __str__(self):
-        return self.root.__str__()
+        return self.root.__str__() + "\n"
 
 
 def left_child_add_prefix(text):
