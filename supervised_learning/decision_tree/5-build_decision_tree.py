@@ -102,16 +102,26 @@ class Node:
     def update_indicator(self):
         """Build an indicator function for points belonging to the node."""
         def is_large_enough(x):
-            if not hasattr(self, 'lower') or len(getattr(self, 'lower', {})) == 0:
+            if (not hasattr(self, 'lower')
+                    or len(getattr(self, 'lower', {})) == 0):
                 return np.ones(x.shape[0], dtype=bool)
             conds = [x[:, k] > self.lower[k] for k in self.lower]
-            return np.all(np.stack(conds, axis=0), axis=0) if conds else np.ones(x.shape[0], bool)
+            return (
+                np.all(np.stack(conds, axis=0), axis=0)
+                if conds else
+                np.ones(x.shape[0], bool)
+            )
 
         def is_small_enough(x):
-            if not hasattr(self, 'upper') or len(getattr(self, 'upper', {})) == 0:
+            if (not hasattr(self, 'upper')
+                    or len(getattr(self, 'upper', {})) == 0):
                 return np.ones(x.shape[0], dtype=bool)
             conds = [x[:, k] <= self.upper[k] for k in self.upper]
-            return np.all(np.stack(conds, axis=0), axis=0) if conds else np.ones(x.shape[0], bool)
+            return (
+                np.all(np.stack(conds, axis=0), axis=0)
+                if conds else
+                np.ones(x.shape[0], bool)
+            )
 
         self.indicator = lambda x: np.all(
             np.stack([is_large_enough(x), is_small_enough(x)], axis=0), axis=0
