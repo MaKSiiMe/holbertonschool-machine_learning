@@ -75,6 +75,7 @@ class Node:
         return leaves
 
     def update_bounds_below(self):
+        """Update the bounds of the subtree rooted at this node"""
         if self.is_root:
             self.lower = {0: -np.inf}
             self.upper = {0: np.inf}
