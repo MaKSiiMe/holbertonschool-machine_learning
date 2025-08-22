@@ -75,6 +75,9 @@ class Leaf(Node):
         self.depth = depth
         self.is_root = is_root
 
+    def __str__(self):
+        return f"leaf [value={self.value}]"
+
     def max_depth_below(self):
         """Calculate the maximum depth of the subtree rooted at this leaf"""
         return self.depth
@@ -82,9 +85,6 @@ class Leaf(Node):
     def count_nodes_below(self, only_leaves=False):
         """Count the number of nodes in the subtree rooted at this leaf"""
         return 1
-
-    def __str__(self):
-        return f"leaf [value={self.value}]"
 
 
 class Decision_Tree:
