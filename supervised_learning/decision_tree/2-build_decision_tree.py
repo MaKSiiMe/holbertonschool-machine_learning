@@ -1,30 +1,20 @@
 #!/usr/bin/env python3
 """Module for building a decision tree"""
-
-
-class Leaf:
-    """Class representing a leaf node in the decision tree"""
-    def __init__(self, value, depth=0, is_root=False):
-        self.value = value
-        self.depth = depth
-        self.is_root = is_root
-        self.is_leaf = True
-
-    def __str__(self):
-        return f"leaf [value={self.value}]"
+import numpy as np
 
 
 class Node:
     """Class representing a node in the decision tree"""
-    def __init__(self, feature, threshold, left_child=None,
-                 right_child=None, depth=0, is_root=False):
+    def __init__(self, feature=None, threshold=None, left_child=None,
+                 right_child=None, is_root=False, depth=0):
         self.feature = feature
         self.threshold = threshold
         self.left_child = left_child
         self.right_child = right_child
-        self.depth = depth
-        self.is_root = is_root
         self.is_leaf = False
+        self.is_root = is_root
+        self.sub_population = None
+        self.depth = depth
 
     def __str__(self):
         label = "root" if self.is_root else "node"
@@ -43,6 +33,58 @@ class Node:
                 right_child_add_prefix(str(self.right_child)).rstrip("\n")
             )
         return "\n".join(parts)
+
+    def max_depth_below(self):
+        """Calculate the maximum depth of the subtree rooted at this node"""
+        if self.left_child is None and self.right_child is None:
+            return self.depth
+        depths = []
+        if self.left_child is not None:
+            depths.append(self.left_child.max_depth_below())
+        if self.right_child is not None:
+            depths.append(self.right_child.max_depth_below())
+        return max(depths)
+
+    def count_nodes_below(self, only_leaves=False):
+        """Count the number of nodes in the subtree rooted at this node"""
+        if self.left_child is None and self.right_child is None:
+            return 1
+        if only_leaves:
+            total = 0
+            if self.left_child is not None:
+                total += self.left_child.count_nodes_below(only_leaves=True)
+            if self.right_child is not None:
+                total += self.right_child.count_nodes_below(only_leaves=True)
+            return total
+        total = 1
+        if self.left_child is not None:
+            total += self.left_child.count_nodes_below(only_leaves=only_leaves)
+        if self.right_child is not None:
+            total += self.right_child.count_nodes_below(
+                only_leaves=only_leaves
+            )
+        return total
+
+
+class Leaf(Node):
+    """Class representing a leaf node in the decision tree"""
+    def __init__(self, value, depth=0, is_root=False):
+        super().__init__()
+        self.value = value
+        self.is_leaf = True
+        self.depth = depth
+        self.is_root = is_root
+
+    def max_depth_below(self):
+        """Calculate the maximum depth of the subtree rooted at this leaf"""
+        return self.depth
+
+    def count_nodes_below(self, only_leaves=False):
+        """Count the number of nodes in the subtree rooted at this leaf"""
+        return 1
+
+    def __str__(self):
+        return f"leaf [value={self.value}]"
 
 
 class Decision_Tree:
