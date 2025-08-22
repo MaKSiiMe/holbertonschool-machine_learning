@@ -75,31 +75,26 @@ class Node:
         return leaves
 
     def update_bounds_below(self):
-        """Update the bounds (lower / upper dicts) below this node"""
         if self.is_root:
-            self.lower = {}
-            self.upper = {}
-        else:
-            if not hasattr(self, 'lower'):
-                self.lower = {}
-            if not hasattr(self, 'upper'):
-                self.upper = {}
+            self.lower = {0: -np.inf}
+            self.upper = {0: np.inf}
 
-        if self.left_child is not None:
-            self.left_child.lower = dict(self.lower)
-            self.left_child.upper = dict(self.upper)
-            self.left_child.lower[self.feature] = self.threshold
-        if self.right_child is not None:
-            self.right_child.lower = dict(self.lower)
-            self.right_child.upper = dict(self.upper)
-            self.right_child.upper[self.feature] = self.threshold
-            if self.is_root and self.feature not in self.right_child.lower:
-                self.right_child.lower[self.feature] = -np.inf
+        for child in (self.left_child, self.right_child):
+            if child is None:
+                continue
+            child.lower = dict(self.lower)
+            child.upper = dict(self.upper)
+            if self.feature is not None and self.threshold is not None:
+                if child is self.left_child:
+                    prev_lower = child.lower.get(self.feature, -np.inf)
+                    child.lower[self.feature] = max(prev_lower, self.threshold)
+                else:
+                    prev_upper = child.upper.get(self.feature, np.inf)
+                    child.upper[self.feature] = min(prev_upper, self.threshold)
 
-        if self.left_child is not None and not self.left_child.is_leaf:
-            self.left_child.update_bounds_below()
-        if self.right_child is not None and not self.right_child.is_leaf:
-            self.right_child.update_bounds_below()
+        for child in (self.left_child, self.right_child):
+            if child is not None:
+                child.update_bounds_below()
 
 
 class Leaf(Node):
@@ -111,7 +106,7 @@ class Leaf(Node):
         self.is_leaf = True
 
     def __str__(self):
-        return (f"-> leaf [value={self.value}]")
+        return f"-> leaf [value={self.value}]"
 
     def max_depth_below(self):
         """Calculate the maximum depth of the subtree rooted at this leaf"""
@@ -124,6 +119,9 @@ class Leaf(Node):
     def get_leaves_below(self):
         """Get all leaves below this leaf (inclusive)"""
         return [self]
+
+    def update_bounds_below(self):
+        return
 
 
 class Decision_Tree:
@@ -139,16 +137,8 @@ class Decision_Tree:
         return self.root.get_leaves_below()
 
     def update_bounds(self):
-        """Update the bounds for all leaves in the decision tree"""
+        """Update the bounds of the decision tree"""
         self.root.update_bounds_below()
-        for leaf in self.get_leaves():
-            if not hasattr(leaf, 'lower'):
-                leaf.lower = {}
-            if not hasattr(leaf, 'upper'):
-                leaf.upper = {}
-            for f in list(leaf.lower.keys()):
-                if f not in leaf.upper:
-                    leaf.upper[f] = np.inf
 
 
 def left_child_add_prefix(text):
