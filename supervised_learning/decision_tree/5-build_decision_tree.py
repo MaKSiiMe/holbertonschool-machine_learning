@@ -5,137 +5,177 @@ from __future__ import annotations
 import numpy as np
 
 
-class Leaf:
-	"""Leaf node (stocke une valeur et recevra bornes + indicateur)."""
-	def __init__(self, value, depth=0, is_root=False):
-		self.value = value
-		self.depth = depth
-		self.is_root = is_root
-		self.is_leaf = True
-
-	def __str__(self):
-		return f"-> leaf [value={self.value}]"
-
-	def get_leaves_below(self):
-		return [self]
-
-
 class Node:
-	def __init__(
-		self, feature, threshold, *, left_child=None,
-		right_child=None, depth=0, is_root=False
-	):
-		self.feature = feature
-		self.threshold = threshold
-		self.left_child = left_child
-		self.right_child = right_child
-		self.depth = depth
-		self.is_root = is_root
-		self.is_leaf = False
+    """Class representing a node in the decision tree"""
+    def __init__(self, feature=None, threshold=None, left_child=None,
+                 right_child=None, is_root=False, depth=0):
+        self.feature = feature
+        self.threshold = threshold
+        self.left_child = left_child
+        self.right_child = right_child
+        self.is_leaf = False
+        self.is_root = is_root
+        self.sub_population = None
+        self.depth = depth
 
-	def __str__(self):
-		root_line = f"[feature={self.feature}, threshold={self.threshold}]"
-		if not self.left_child and not self.right_child:
-			return root_line
-		parts = [root_line]
-		if self.left_child:
-			parts.append(
-				left_child_add_prefix(str(self.left_child)).rstrip("\n")
-			)
-		if self.right_child:
-			parts.append(
-				right_child_add_prefix(str(self.right_child)).rstrip("\n")
-			)
-		return "\n".join(parts)
+    def __str__(self):
+        label = "root" if self.is_root else "node"
+        root_line = (
+            f"{label} [feature={self.feature}, threshold={self.threshold}]"
+        )
+        if not self.left_child and not self.right_child:
+            return root_line
+        parts = [root_line]
+        if self.left_child:
+            parts.append(
+                left_child_add_prefix(str(self.left_child)).rstrip("\n")
+            )
+        if self.right_child:
+            parts.append(
+                right_child_add_prefix(str(self.right_child)).rstrip("\n")
+            )
+        return "\n".join(parts)
 
-	def get_leaves_below(self):
-		leaves = []
-		if self.left_child:
-			leaves.extend(self.left_child.get_leaves_below())
-		if self.right_child:
-			leaves.extend(self.right_child.get_leaves_below())
-		return leaves
+    def max_depth_below(self):
+        """Calculate the maximum depth of the subtree rooted at this node"""
+        if self.left_child is None and self.right_child is None:
+            return self.depth
+        depths = []
+        if self.left_child is not None:
+            depths.append(self.left_child.max_depth_below())
+        if self.right_child is not None:
+            depths.append(self.right_child.max_depth_below())
+        return max(depths)
 
-	def update_bounds_below(self):
-		if self.is_root:
-			self.lower = {}
-			self.upper = {}
-		else:
-			if not hasattr(self, 'lower'):
-				self.lower = {}
-			if not hasattr(self, 'upper'):
-				self.upper = {}
+    def count_nodes_below(self, only_leaves=False):
+        """Count the number of nodes in the subtree rooted at this node"""
+        if self.left_child is None and self.right_child is None:
+            return 1
+        if only_leaves:
+            total = 0
+            if self.left_child is not None:
+                total += self.left_child.count_nodes_below(only_leaves=True)
+            if self.right_child is not None:
+                total += self.right_child.count_nodes_below(only_leaves=True)
+            return total
+        total = 1
+        if self.left_child is not None:
+            total += self.left_child.count_nodes_below(only_leaves=only_leaves)
+        if self.right_child is not None:
+            total += self.right_child.count_nodes_below(
+                only_leaves=only_leaves
+            )
+        return total
 
-		if self.left_child is not None:
-			self.left_child.lower = dict(self.lower)
-			self.left_child.upper = dict(self.upper)
-			self.left_child.lower[self.feature] = self.threshold
-		if self.right_child is not None:
-			self.right_child.lower = dict(self.lower)
-			self.right_child.upper = dict(self.upper)
-			self.right_child.upper[self.feature] = self.threshold
-			if self.is_root and self.feature not in self.right_child.lower:
-				self.right_child.lower[self.feature] = -np.inf
+    def get_leaves_below(self):
+        """Get all leaves below this node (inclusive)"""
+        leaves = []
+        if self.left_child:
+            leaves.extend(self.left_child.get_leaves_below())
+        if self.right_child:
+            leaves.extend(self.right_child.get_leaves_below())
+        return leaves
 
-		if self.left_child is not None and not self.left_child.is_leaf:
-			self.left_child.update_bounds_below()
-		if self.right_child is not None and not self.right_child.is_leaf:
-			self.right_child.update_bounds_below()
+    def update_bounds_below(self):
+        """Update the bounds of the subtree rooted at this node"""
+        if self.is_root:
+            self.lower = {0: -np.inf}
+            self.upper = {0: np.inf}
 
-	def update_indicator(self):
-		def is_large_enough(x):
-			if not hasattr(self, 'lower') or len(getattr(self, 'lower', {})) == 0:
-				return np.ones(x.shape[0], dtype=bool)
-			conds = [x[:, k] > self.lower[k] for k in self.lower]
-			return np.all(np.stack(conds, axis=0), axis=0) if conds else np.ones(x.shape[0], bool)
+        for child in (self.left_child, self.right_child):
+            if child is None:
+                continue
+            child.lower = dict(self.lower)
+            child.upper = dict(self.upper)
+            if self.feature is not None and self.threshold is not None:
+                if child is self.left_child:
+                    prev_lower = child.lower.get(self.feature, -np.inf)
+                    child.lower[self.feature] = max(prev_lower, self.threshold)
+                else:
+                    prev_upper = child.upper.get(self.feature, np.inf)
+                    child.upper[self.feature] = min(prev_upper, self.threshold)
 
-		def is_small_enough(x):
-			if not hasattr(self, 'upper') or len(getattr(self, 'upper', {})) == 0:
-				return np.ones(x.shape[0], dtype=bool)
-			conds = [x[:, k] <= self.upper[k] for k in self.upper]
-			return np.all(np.stack(conds, axis=0), axis=0) if conds else np.ones(x.shape[0], bool)
+        for child in (self.left_child, self.right_child):
+            if child is not None:
+                child.update_bounds_below()
 
-		self.indicator = lambda x: np.all(
-			np.stack([is_large_enough(x), is_small_enough(x)], axis=0), axis=0
-		)
+    def update_indicator(self):
+        """Build an indicator function for points belonging to the node."""
+        def is_large_enough(x):
+            if not hasattr(self, 'lower') or len(getattr(self, 'lower', {})) == 0:
+                return np.ones(x.shape[0], dtype=bool)
+            conds = [x[:, k] > self.lower[k] for k in self.lower]
+            return np.all(np.stack(conds, axis=0), axis=0) if conds else np.ones(x.shape[0], bool)
+
+        def is_small_enough(x):
+            if not hasattr(self, 'upper') or len(getattr(self, 'upper', {})) == 0:
+                return np.ones(x.shape[0], dtype=bool)
+            conds = [x[:, k] <= self.upper[k] for k in self.upper]
+            return np.all(np.stack(conds, axis=0), axis=0) if conds else np.ones(x.shape[0], bool)
+
+        self.indicator = lambda x: np.all(
+            np.stack([is_large_enough(x), is_small_enough(x)], axis=0), axis=0
+        )
 
 
-Leaf.update_indicator = Node.update_indicator
+class Leaf(Node):
+    """Class representing a leaf node in the decision tree"""
+    def __init__(self, value, depth=0, is_root=False):
+        self.value = value
+        self.depth = depth
+        self.is_root = is_root
+        self.is_leaf = True
+
+    def __str__(self):
+        return f"-> leaf [value={self.value}]"
+
+    def max_depth_below(self):
+        """Calculate the maximum depth of the subtree rooted at this leaf"""
+        return self.depth
+
+    def count_nodes_below(self, only_leaves=False):
+        """Count the number of nodes in the subtree rooted at this leaf"""
+        return 1
+
+    def get_leaves_below(self):
+        """Get all leaves below this leaf (inclusive)"""
+        return [self]
+
+    def update_bounds_below(self):
+        """Update the bounds of the subtree rooted at this node"""
+        return
 
 
 class Decision_Tree:
-	def __init__(self, root):
-		self.root = root
+    """Class representing a decision tree"""
+    def __init__(self, root):
+        self.root = root
 
-	def __str__(self):
-		return self.root.__str__()
+    def __str__(self):
+        return self.root.__str__()
 
-	def get_leaves(self):
-		return self.root.get_leaves_below()
+    def get_leaves(self):
+        """Get all leaves in the decision tree"""
+        return self.root.get_leaves_below()
 
-	def update_bounds(self):
-		self.root.update_bounds_below()
-		for leaf in self.get_leaves():
-			if not hasattr(leaf, 'lower'):
-				leaf.lower = {}
-			if not hasattr(leaf, 'upper'):
-				leaf.upper = {}
-			for f in list(leaf.lower.keys()):
-				if f not in leaf.upper:
-					leaf.upper[f] = np.inf
+    def update_bounds(self):
+        """Update the bounds of the decision tree"""
+        self.root.update_bounds_below()
 
 
 def left_child_add_prefix(text):
-	lines = text.split("\n")
-	new_text = "    +--" + lines[0] + "\n"
-	for x in lines[1:]:
-		new_text += "    |  " + x + "\n"
-	return new_text
+    """Add a prefix to the left child representation"""
+    lines = text.split("\n")
+    new_text = "    +---> " + lines[0] + "\n"
+    for x in lines[1:]:
+        new_text += ("    |  " + x) + "\n"
+    return new_text
 
 
 def right_child_add_prefix(text):
-	lines = text.split("\n")
-	new_text = "    \\--" + lines[0] + "\n"
-	for x in lines[1:]:
-		new_text += "       " + x + "\n"
-	return new_text
+    """Add a prefix to the right child representation"""
+    lines = text.split("\n")
+    new_text = "    +---> " + lines[0] + "\n"
+    for x in lines[1:]:
+        new_text += ("       " + x) + "\n"
+    return new_text
