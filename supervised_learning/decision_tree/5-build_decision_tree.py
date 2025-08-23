@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 """Module for building a decision tree"""
-
-from __future__ import annotations
 import numpy as np
 
 
