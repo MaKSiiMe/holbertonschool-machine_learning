@@ -140,6 +140,7 @@ class Leaf(Node):
         self.depth = depth
         self.is_root = is_root
         self.is_leaf = True
+        self.sub_population = None
 
     def __str__(self):
         return f"-> leaf [value={self.value}]"
@@ -167,9 +168,11 @@ class Leaf(Node):
 
 class Decision_Tree:
     """Class representing a decision tree"""
-    def __init__(self, split_criterion="random", max_depth=None, seed=None):
+    def __init__(self, split_criterion="random",
+                 max_depth=20, seed=0, min_pop=2):
         self.split_criterion = split_criterion
         self.max_depth = max_depth
+        self.min_pop = min_pop
         self.seed = seed
         self.rng = np.random.default_rng(seed)
 
@@ -233,14 +236,8 @@ class Decision_Tree:
 
     def fit_node(self, node):
         """Fit a node in the decision tree."""
-        if self.max_depth is not None and node.depth >= self.max_depth:
-            value = self.calculate_leaf_value(node.sub_population)
-            node.is_leaf = True
-            node.left_child = None
-            node.right_child = None
-            node.value = value
-            return
         node.feature, node.threshold = self.split_criterion(node)
+
         left_population = (
             (self.explanatory[:, node.feature] > node.threshold)
             & node.sub_population
@@ -249,33 +246,38 @@ class Decision_Tree:
             (self.explanatory[:, node.feature] <= node.threshold)
             & node.sub_population
         )
-        if self.is_leaf(left_population):
+
+        is_left_leaf = self.is_leaf(left_population,  node.depth + 1)
+        is_right_leaf = self.is_leaf(right_population, node.depth + 1)
+
+        if is_left_leaf:
             node.left_child = self.get_leaf_child(node, left_population)
         else:
             node.left_child = self.get_node_child(node, left_population)
             self.fit_node(node.left_child)
-        if self.is_leaf(right_population):
+
+        if is_right_leaf:
             node.right_child = self.get_leaf_child(node, right_population)
         else:
             node.right_child = self.get_node_child(node, right_population)
             self.fit_node(node.right_child)
 
-    def is_leaf(self, sub_population):
+    def is_leaf(self, sub_population, depth):
         """Check if a node is a leaf node."""
-        min_pop = 2
-        pop_size = np.sum(sub_population)
-        if pop_size < min_pop:
+        if np.sum(sub_population) < self.min_pop:
             return True
-        unique_classes = np.unique(self.target[sub_population])
-        if unique_classes.size == 1:
+        if self.max_depth is not None and depth >= self.max_depth:
             return True
-        return False
+        return np.unique(self.target[sub_population]).size == 1
 
     def calculate_leaf_value(self, sub_population):
         """Calculate the value of a leaf node."""
+        if np.sum(sub_population) == 0:
+            vals, counts = np.unique(self.target, return_counts=True)
+            return vals[np.argmax(counts)]
         vals, counts = np.unique(
             self.target[sub_population], return_counts=True
-        )
+            )
         return vals[np.argmax(counts)]
 
     def get_leaf_child(self, node, sub_population):
@@ -356,5 +358,5 @@ def right_child_add_prefix(text):
 
 
 if __name__ == "__main__":
-    T = Decision_Tree()
+    T = Decision_Tree(split_criterion="random", max_depth=20, seed=0)
     T.fit(explanatory, target)
