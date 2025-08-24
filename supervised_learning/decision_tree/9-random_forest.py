@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Module for building a decision tree"""
+"""Module for building a random forest classifier"""
 import numpy as np
 Decision_Tree = __import__('8-build_decision_tree').Decision_Tree
 

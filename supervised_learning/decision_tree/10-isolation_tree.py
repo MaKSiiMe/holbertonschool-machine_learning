@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Module for building a decision tree"""
+"""Module for building an isolation tree"""
 import numpy as np
 Decision_Tree = __import__('8-build_decision_tree').Decision_Tree
 Node = __import__('8-build_decision_tree').Node
