@@ -223,7 +223,7 @@ class Decision_Tree:
         self.explanatory = explanatory
         self.target = target
         self.root = Node(is_root=True, depth=0)
-        self.root.sub_population = np.ones(self.target, dtype=bool)
+        self.root.sub_population = np.ones(self.target.shape[0], dtype=bool)
         self.fit_node(self.root)
         self.update_predict()
         if verbose == 1:
@@ -541,7 +541,7 @@ class Isolation_Random_Tree():
     def get_leaf_child(self, node, sub_population):
         """Get the leaf child node."""
         d = node.depth + 1
-        leaf_child = Leaf(value=None, depth=d)
+        leaf_child = Leaf(value=d, depth=d)
         leaf_child.sub_population = sub_population
         return leaf_child
 
@@ -598,14 +598,8 @@ class Isolation_Random_Tree():
     - Number of leaves          : {self.count_nodes(only_leaves=True)}""")
 
     def predict(self, X):
-        """ Predict the leaf index for each sample in X."""
-        leaves = self.get_leaves()
-        n = X.shape[0]
-        result = np.full(n, -1, dtype=int)
-        for idx, leaf in enumerate(leaves):
-            mask = leaf.indicator(X)
-            result[mask] = idx
-        return result
+        """Return the depth of the leaf each sample falls into."""
+        return np.array([self.root.pred(x) for x in X], dtype=int)
 
 
 def left_child_add_prefix(text):
