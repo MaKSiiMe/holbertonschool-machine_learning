@@ -406,6 +406,7 @@ class Decision_Tree:
 
 
 class Random_Forest():
+    """Class representing a random forest"""
     def __init__(self, n_trees=100, max_depth=10, min_pop=1, seed=0):
         self.numpy_predicts = []
         self.target = None
@@ -462,6 +463,7 @@ class Random_Forest():
             )
 
     def accuracy(self, test_explanatory, test_target):
+        """Compute the accuracy of the model on the test data."""
         return (
             np.sum(np.equal(self.predict(test_explanatory), test_target)) /
             test_target.size
