@@ -644,7 +644,7 @@ class Isolation_Random_Forest():
     - Mean number of leaves          : {np.array(leaves).mean()}""")
 
     def suspects(self, explanatory, n_suspects):
-        """Returns the n_suspects rows in explanatory that have the smallest mean depth"""
+        """Return the n_suspects with the smallest mean depth"""
         depths = self.predict(explanatory)
         idx = np.argsort(depths)[:n_suspects]
         return explanatory[idx], depths[idx]
