@@ -475,12 +475,10 @@ class Random_Forest():
 class Isolation_Random_Tree():
     def __init__(self, max_depth=10, seed=0, root=None):
         self.rng = np.random.default_rng(seed)
-        if root:
-            self.root = root
-        else:
-            self.root = Node(is_root=True)
+        self.root = root if root else Node(is_root=True, depth=0)
         self.explanatory = None
         self.max_depth = max_depth
+        self.predict = None
         self.min_pop = 1
 
     def __str__(self):
@@ -489,7 +487,6 @@ class Isolation_Random_Tree():
     def depth(self):
         """Get the depth of the decision tree."""
         return self.root.max_depth_below() if hasattr(self, 'root') else 0
-
 
     def count_nodes(self, only_leaves=False):
         """Count the number of nodes in the decision tree."""
@@ -512,8 +509,21 @@ class Isolation_Random_Tree():
         for leaf in leaves:
             leaf.update_indicator()
 
-    def np_extrema(self,arr):
-        return np.min(arr), np.max(arr)             
+        def _predict(A):
+            n = A.shape[0]
+            out = np.empty(n, dtype=int)
+            mask_total = np.zeros(n, dtype=bool)
+            for leaf in leaves:
+                m = leaf.indicator(A)
+                out[m] = leaf.depth
+                mask_total |= m
+            if not np.all(mask_total):
+                raise ValueError("Some rows in A are not covered by any leaf.")
+            return out
+        self.predict = _predict
+
+    def np_extrema(self, arr):
+        return np.min(arr), np.max(arr)
 
     def random_split_criterion(self, node):
         """Randomly select a feature and a threshold for splitting."""
@@ -530,15 +540,13 @@ class Isolation_Random_Tree():
 
     def get_leaf_child(self, node, sub_population):
         """Get the leaf child node."""
-        leaf_child = Leaf(value=None)
-        leaf_child.depth = node.depth + 1
+        leaf_child = Leaf(value=None, depth=node.depth + 1)
         leaf_child.sub_population = sub_population
         return leaf_child
 
     def get_node_child(self, node, sub_population):
         """Get the node child of a node."""
-        n = Node()
-        n.depth = node.depth + 1
+        n = Node(depth=node.depth + 1)
         n.sub_population = sub_population
         return n
 
@@ -551,6 +559,7 @@ class Isolation_Random_Tree():
         return False
 
     def fit_node(self, node):
+        """Fit a node in the decision tree."""
         node.feature, node.threshold = self.random_split_criterion(node)
 
         left_population = (
@@ -562,8 +571,7 @@ class Isolation_Random_Tree():
             & node.sub_population
         )
 
-        is_left_leaf = left_population.sum() <= self.min_pop
-
+        is_left_leaf = self.is_leaf(left_population, node.depth + 1)
         if is_left_leaf:
             node.left_child = self.get_leaf_child(node, left_population)
         else:
@@ -571,29 +579,24 @@ class Isolation_Random_Tree():
             self.fit_node(node.left_child)
 
         is_right_leaf = self.is_leaf(right_population, node.depth + 1)
-
         if is_right_leaf:
             node.right_child = self.get_leaf_child(node, right_population)
         else:
             node.right_child = self.get_node_child(node, right_population)
             self.fit_node(node.right_child)
 
-
     def fit(self, explanatory, verbose=0):
-
-        self.split_criterion = self.random_split_criterion
+        """Fit the decision tree model to the data."""
         self.explanatory = explanatory
-        self.root.sub_population = np.ones(explanatory.shape[0], dtype=bool)  # Correction ici
-
+        self.root.sub_population = np.ones(explanatory.shape[0], dtype=bool)
         self.fit_node(self.root)
         self.update_predict()
 
         if verbose == 1:
             print(f"""  Training finished.
-    - Depth                     : { self.depth()       }
-    - Number of nodes           : { self.count_nodes() }
-    - Number of leaves          : { self.count_nodes(only_leaves=True) }""")
-
+    - Depth                     : {self.depth()}
+    - Number of nodes           : {self.count_nodes()}
+    - Number of leaves          : {self.count_nodes(only_leaves=True)}""")
 
     def predict(self, X):
         """ Predict the leaf index for each sample in X."""
