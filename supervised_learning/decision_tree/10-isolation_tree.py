@@ -540,9 +540,10 @@ class Isolation_Random_Tree():
 
     def get_leaf_child(self, node, sub_population):
         """Get the leaf child node."""
-        leaf = Leaf(value=None, depth=node.depth + 1)
-        leaf.sub_population = sub_population
-        return leaf
+        d = node.depth + 1
+        leaf_child = Leaf(value=None, depth=d)
+        leaf_child.sub_population = sub_population
+        return leaf_child
 
     def get_node_child(self, node, sub_population):
         """Get the node child of a node."""
