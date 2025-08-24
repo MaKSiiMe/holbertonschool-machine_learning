@@ -473,6 +473,7 @@ class Random_Forest():
 
 
 class Isolation_Random_Tree():
+    """Class representing an isolation random tree"""
     def __init__(self, max_depth=10, seed=0, root=None):
         self.rng = np.random.default_rng(seed)
         self.root = root if root else Node(is_root=True, depth=0)
