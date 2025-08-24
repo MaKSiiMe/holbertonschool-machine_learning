@@ -346,24 +346,24 @@ class Decision_Tree:
         return (values[1:] + values[:-1]) / 2
 
     def Gini_split_criterion_one_feature(self, node, feature):
-        """Compute the Gini impurity for a split on a single feature."""
-        X = self.explanatory[:, feature][node.sub_population]
-        y = self.target[node.sub_population]
-        thresholds = self.possible_thresholds(node, feature)
+        """Return (best_threshold, min_weighted_gini) for a single feature."""
+        X = self.explanatory[:, feature][node.sub_population]   # (n,)
+        y = self.target[node.sub_population]                    # (n,)
+        thresholds = self.possible_thresholds(node, feature)    # (t,)
         if thresholds.size == 0:
             return np.nan, np.inf
 
-        classes = np.unique(y)
-        X_col = X[:, None]  # (n, 1)
-        thresholds_row = thresholds[None, :]  # (1, t)
-        left_mask = X_col > thresholds_row  # (n, t)
-        right_mask = ~left_mask  # (n, t)
+        classes = np.unique(y)                                  # (c,)
 
-        y_col = y[:, None]  # (n, 1)
-        class_matrix = (y_col == classes[None, :])  # (n, c)
+        X_col = X[:, None]                                      # (n,1)
+        T_row = thresholds[None, :]                             # (1,t)
+        left_mask = X_col > T_row                             # (n,t)
+        right_mask = ~left_mask                                 # (n,t)
 
-        left_counts = np.einsum('nt,nc->tc', left_mask, class_matrix)
-        right_counts = np.einsum('nt,nc->tc', right_mask, class_matrix)
+        C = (y[:, None] == classes[None, :]).astype(int)        # (n,c)
+
+        left_counts = np.einsum('nt,nc->tc', left_mask,  C)
+        right_counts = np.einsum('nt,nc->tc', right_mask, C)
 
         n_left = left_counts.sum(axis=1)
         n_right = right_counts.sum(axis=1)
@@ -380,17 +380,17 @@ class Decision_Tree:
             where=n_right[:, None] != 0
         )
 
-        gini_left = 1 - np.sum(left_props ** 2, axis=1)
-        gini_right = 1 - np.sum(right_props ** 2, axis=1)
+        gini_left = 1.0 - np.sum(left_props ** 2, axis=1)
+        gini_right = 1.0 - np.sum(right_props ** 2, axis=1)
 
-        weighted_gini = np.where(
-            n_total > 0,
-            (n_left * gini_left + n_right * gini_right) / n_total,
-            np.inf
-        )
+        weighted_gini = (n_left * gini_left + n_right * gini_right) / \
+            np.maximum(n_total, 1)
 
-        idx = np.argmin(weighted_gini)
-        return thresholds[idx], weighted_gini[idx]
+        degenerate = (n_left == 0) | (n_right == 0)
+        weighted_gini = np.where(degenerate, np.inf, weighted_gini)
+
+        j = np.argmin(weighted_gini)
+        return thresholds[j], weighted_gini[j]
 
     def Gini_split_criterion(self, node):
         """Compute the Gini impurity for a split on a single feature."""
