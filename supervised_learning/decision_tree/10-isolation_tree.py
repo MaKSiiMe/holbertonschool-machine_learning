@@ -223,7 +223,7 @@ class Decision_Tree:
         self.explanatory = explanatory
         self.target = target
         self.root = Node(is_root=True, depth=0)
-        self.root.sub_population = np.ones_like(self.target, dtype='bool')
+        self.root.sub_population = np.ones(self.target, dtype=bool)
         self.fit_node(self.root)
         self.update_predict()
         if verbose == 1:
@@ -540,9 +540,9 @@ class Isolation_Random_Tree():
 
     def get_leaf_child(self, node, sub_population):
         """Get the leaf child node."""
-        leaf_child = Leaf(value=None, depth=node.depth + 1)
-        leaf_child.sub_population = sub_population
-        return leaf_child
+        leaf = Leaf(value=None, depth=node.depth + 1)
+        leaf.sub_population = sub_population
+        return leaf
 
     def get_node_child(self, node, sub_population):
         """Get the node child of a node."""
@@ -571,15 +571,13 @@ class Isolation_Random_Tree():
             & node.sub_population
         )
 
-        is_left_leaf = self.is_leaf(left_population, node.depth + 1)
-        if is_left_leaf:
+        if self.is_leaf(left_population, node.depth + 1):
             node.left_child = self.get_leaf_child(node, left_population)
         else:
             node.left_child = self.get_node_child(node, left_population)
             self.fit_node(node.left_child)
 
-        is_right_leaf = self.is_leaf(right_population, node.depth + 1)
-        if is_right_leaf:
+        if self.is_leaf(right_population, node.depth + 1):
             node.right_child = self.get_leaf_child(node, right_population)
         else:
             node.right_child = self.get_node_child(node, right_population)
