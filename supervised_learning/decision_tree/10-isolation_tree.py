@@ -523,6 +523,7 @@ class Isolation_Random_Tree():
         self.predict = _predict
 
     def np_extrema(self, arr):
+        """Return the minimum and maximum of a numpy array."""
         return np.min(arr), np.max(arr)
 
     def random_split_criterion(self, node):
