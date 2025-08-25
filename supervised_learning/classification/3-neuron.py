@@ -7,9 +7,9 @@ class Neuron:
     """Neuron for binary classification"""
     def __init__(self, nx):
         if not isinstance(nx, int):
-            raise TypeError("nx must be a integer")
+            raise TypeError("nx must be an integer")
         if nx < 1:
-            raise ValueError("nx must be positive")
+            raise ValueError("nx must be a positive integer")
 
         self.__W = np.random.randn(1, nx)
         self.__b = 0
@@ -36,7 +36,7 @@ class Neuron:
     def cost(self, Y, A):
         """Calculates the cost of the model using logistic regression"""
         m = Y.shape[1]
-        cost = -1/m * np.sum(
+        cost = -(1 / m) * np.sum(
             Y * np.log(A) + (1 - Y) * np.log(1.0000001 - A)
         )
-        return cost
+        return float(cost)
