@@ -85,21 +85,21 @@ class DeepNeuralNetwork:
 
         dZ = cache['A' + str(L)] - Y
 
-        for l in range(L, 0, -1):
-            A_prev = cache['A' + str(l - 1)]
-            Wl = self.__weights['W' + str(l)]
-            b_l = self.__weights['b' + str(l)]
+        for layer in range(L, 0, -1):
+            A_prev = cache['A' + str(layer - 1)]
+            Wl = self.__weights['W' + str(layer)]
+            b_l = self.__weights['b' + str(layer)]
 
             dW = (1 / m) * (dZ @ A_prev.T)
             db = (1 / m) * np.sum(dZ, axis=1, keepdims=True)
 
             Wl_before = Wl.copy()
 
-            self.__weights['W' + str(l)] = Wl - alpha * dW
-            self.__weights['b' + str(l)] = b_l - alpha * db
+            self.__weights['W' + str(layer)] = Wl - alpha * dW
+            self.__weights['b' + str(layer)] = b_l - alpha * db
 
-            if l > 1:
-                A_prev_act = cache['A' + str(l - 1)]
+            if layer > 1:
+                A_prev_act = cache['A' + str(layer - 1)]
                 dZ = (Wl_before.T @ dZ) * (A_prev_act * (1 - A_prev_act))
 
     def train(self, X, Y, iterations=5000, alpha=0.05,
