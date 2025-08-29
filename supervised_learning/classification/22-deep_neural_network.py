@@ -68,7 +68,7 @@ class DeepNeuralNetwork:
         """Calculates the cost of the model using logistic regression."""
         m = Y.shape[1]
         cost = -1/m * np.sum(Y * np.log(A) + (1 - Y) * np.log(1.0000001 - A))
-        return cost
+        return float(cost)
 
     def evaluate(self, X, Y):
         """Evaluates the neural network's predictions."""
@@ -80,23 +80,26 @@ class DeepNeuralNetwork:
     def gradient_descent(self, Y, cache, alpha=0.05):
         """Calculates one pass of gradient descent on the neural network."""
         m = Y.shape[1]
+        L = self.__L
 
-        A_L = cache['A' + str(self.__L)]
-        dZ = A_L - Y
+        dZ = cache['A' + str(L)] - Y
 
-        for layer in range(self.__L, 0, -1):
-            A_prev = cache['A' + str(layer - 1)]
+        for l in range(L, 0, -1):
+            A_prev = cache['A' + str(l - 1)]
+            Wl = self.__weights['W' + str(l)]
+            b_l = self.__weights['b' + str(l)]
 
-            dW = (1/m) * np.dot(dZ, A_prev.T)
-            db = (1/m) * np.sum(dZ, axis=1, keepdims=True)
+            dW = (1 / m) * (dZ @ A_prev.T)
+            db = (1 / m) * np.sum(dZ, axis=1, keepdims=True)
 
-            self.__weights['W' + str(layer)] -= alpha * dW
-            self.__weights['b' + str(layer)] -= alpha * db
+            Wl_before = Wl.copy()
 
-            if layer > 1:
-                W = self.__weights['W' + str(layer)]
-                A_prev = cache['A' + str(layer - 1)]
-                dZ = np.dot(W.T, dZ) * A_prev * (1 - A_prev)
+            self.__weights['W' + str(l)] = Wl - alpha * dW
+            self.__weights['b' + str(l)] = b_l - alpha * db
+
+            if l > 1:
+                A_prev_act = cache['A' + str(l - 1)]
+                dZ = (Wl_before.T @ dZ) * (A_prev_act * (1 - A_prev_act))
 
     def train(self, X, Y, iterations=5000, alpha=0.05):
         """Trains the deep neural network."""
