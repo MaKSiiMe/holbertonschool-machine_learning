@@ -8,7 +8,7 @@ import pickle
 class DeepNeuralNetwork:
     """Class that defines a deep neural network performing binary
     classification."""
-    def __init__(self, nx, layers):
+    def __init__(self, nx, layers, activation='sig'):
         if not isinstance(nx, int):
             raise TypeError("nx must be an integer")
         if nx < 1:
@@ -17,9 +17,13 @@ class DeepNeuralNetwork:
         if not isinstance(layers, list) or len(layers) == 0:
             raise TypeError("layers must be a list of positive integers")
 
+        if activation not in ['sig', 'tanh']:
+            raise ValueError("activation must be 'sig' or 'tanh'")
+
         self.__L = len(layers)
         self.__cache = {}
         self.__weights = {}
+        self.__activation = activation
 
         for layer in range(self.__L):
             layer_size = layers[layer]
@@ -51,6 +55,11 @@ class DeepNeuralNetwork:
         """Getter for the weights dictionary."""
         return self.__weights
 
+    @property
+    def activation(self):
+        """Getter for the activation function."""
+        return self.__activation
+
     def forward_prop(self, X):
         """Calculates the forward propagation of the neural network."""
         self.__cache['A0'] = X
@@ -61,22 +70,32 @@ class DeepNeuralNetwork:
             b = self.__weights['b' + str(layer)]
 
             Z = np.dot(W, A_prev) + b
-            A = 1 / (1 + np.exp(-Z))
+            
+            if layer == self.__L:
+                exp_Z = np.exp(Z - np.max(Z, axis=0, keepdims=True))
+                A = exp_Z / np.sum(exp_Z, axis=0, keepdims=True)
+            else:
+                if self.__activation == 'sig':
+                    A = 1 / (1 + np.exp(-Z))
+                elif self.__activation == 'tanh':
+                    A = np.tanh(Z)
+            
             self.__cache['A' + str(layer)] = A
 
         return A, self.__cache
 
     def cost(self, Y, A):
-        """Calculates the cost of the model using logistic regression."""
+        """Calculates the cost of the model using categorical cross entropy."""
         m = Y.shape[1]
-        cost = -1/m * np.sum(Y * np.log(A) + (1 - Y) * np.log(1.0000001 - A))
+        cost = -1/m * np.sum(Y * np.log(A + 1e-8))
         return float(cost)
 
     def evaluate(self, X, Y):
         """Evaluates the neural network's predictions."""
         A, _ = self.forward_prop(X)
         cost = self.cost(Y, A)
-        prediction = np.where(A >= 0.5, 1, 0)
+        prediction = np.zeros_like(A)
+        prediction[np.argmax(A, axis=0), np.arange(A.shape[1])] = 1
         return prediction, cost
 
     def gradient_descent(self, Y, cache, alpha=0.05):
@@ -101,7 +120,10 @@ class DeepNeuralNetwork:
 
             if layer > 1:
                 A_prev_act = cache['A' + str(layer - 1)]
-                dZ = (Wl_before.T @ dZ) * (A_prev_act * (1 - A_prev_act))
+                if self.__activation == 'sig':
+                    dZ = (Wl_before.T @ dZ) * (A_prev_act * (1 - A_prev_act))
+                elif self.__activation == 'tanh':
+                    dZ = (Wl_before.T @ dZ) * (1 - A_prev_act ** 2)
 
     def train(self, X, Y, iterations=5000, alpha=0.05,
               verbose=True, graph=True, step=100):
@@ -172,5 +194,5 @@ class DeepNeuralNetwork:
         try:
             with open(filename, 'rb') as f:
                 return pickle.load(f)
-        except FileNotFoundError:
+        except (FileNotFoundError, OSError, pickle.PickleError):
             return None

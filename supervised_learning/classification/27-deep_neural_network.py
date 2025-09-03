@@ -61,22 +61,29 @@ class DeepNeuralNetwork:
             b = self.__weights['b' + str(layer)]
 
             Z = np.dot(W, A_prev) + b
-            A = 1 / (1 + np.exp(-Z))
+            
+            if layer == self.__L:
+                exp_Z = np.exp(Z - np.max(Z, axis=0, keepdims=True))
+                A = exp_Z / np.sum(exp_Z, axis=0, keepdims=True)
+            else:
+                A = 1 / (1 + np.exp(-Z))
+            
             self.__cache['A' + str(layer)] = A
 
         return A, self.__cache
 
     def cost(self, Y, A):
-        """Calculates the cost of the model using logistic regression."""
+        """Calculates the cost of the model using categorical cross entropy."""
         m = Y.shape[1]
-        cost = -1/m * np.sum(Y * np.log(A) + (1 - Y) * np.log(1.0000001 - A))
+        cost = -1/m * np.sum(Y * np.log(A + 1e-8))
         return float(cost)
 
     def evaluate(self, X, Y):
         """Evaluates the neural network's predictions."""
         A, _ = self.forward_prop(X)
         cost = self.cost(Y, A)
-        prediction = np.where(A >= 0.5, 1, 0)
+        prediction = np.zeros_like(A)
+        prediction[np.argmax(A, axis=0), np.arange(A.shape[1])] = 1
         return prediction, cost
 
     def gradient_descent(self, Y, cache, alpha=0.05):
@@ -172,5 +179,5 @@ class DeepNeuralNetwork:
         try:
             with open(filename, 'rb') as f:
                 return pickle.load(f)
-        except FileNotFoundError:
+        except (FileNotFoundError, OSError, pickle.PickleError):
             return None
