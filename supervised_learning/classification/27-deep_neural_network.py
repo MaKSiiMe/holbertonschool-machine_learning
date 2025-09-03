@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""23. Upgrade Train DeepNeuralNetwork"""
+"""27. Update DeepNeuralNetwork"""
 import numpy as np
 import matplotlib.pyplot as plt
 import pickle
@@ -61,13 +61,13 @@ class DeepNeuralNetwork:
             b = self.__weights['b' + str(layer)]
 
             Z = np.dot(W, A_prev) + b
-            
+
             if layer == self.__L:
                 exp_Z = np.exp(Z - np.max(Z, axis=0, keepdims=True))
                 A = exp_Z / np.sum(exp_Z, axis=0, keepdims=True)
             else:
                 A = 1 / (1 + np.exp(-Z))
-            
+
             self.__cache['A' + str(layer)] = A
 
         return A, self.__cache
@@ -75,14 +75,14 @@ class DeepNeuralNetwork:
     def cost(self, Y, A):
         """Calculates the cost of the model using categorical cross entropy."""
         m = Y.shape[1]
-        cost = -1/m * np.sum(Y * np.log(A + 1e-8))
-        return float(cost)
+        A = np.clip(A, 1e-8, 1.0)
+        return float(-np.sum(Y * np.log(A)) / m)
 
     def evaluate(self, X, Y):
         """Evaluates the neural network's predictions."""
         A, _ = self.forward_prop(X)
         cost = self.cost(Y, A)
-        prediction = np.zeros_like(A)
+        prediction = np.zeros_like(A, dtype=np.uint8)
         prediction[np.argmax(A, axis=0), np.arange(A.shape[1])] = 1
         return prediction, cost
 
