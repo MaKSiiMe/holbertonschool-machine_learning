@@ -2,6 +2,7 @@
 """23. Upgrade Train DeepNeuralNetwork"""
 import numpy as np
 import matplotlib.pyplot as plt
+import pickle
 
 
 class DeepNeuralNetwork:
@@ -157,3 +158,19 @@ class DeepNeuralNetwork:
             plt.show()
 
         return self.evaluate(X, Y)
+    
+    def save(self, filename):
+        """Saves the model to a file."""
+        if not filename.endswith('.pkl'):
+            filename += '.pkl'
+        with open(filename, 'wb') as f:
+            pickle.dump(self, f)
+
+    @staticmethod
+    def load(filename):
+        """Loads a model from a file."""
+        try:
+            with open(filename, 'rb') as f:
+                return pickle.load(f)
+        except FileNotFoundError:
+            return None
