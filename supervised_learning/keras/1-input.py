@@ -11,15 +11,14 @@ def build_model(nx, layers, activations, lambtha, keep_prob):
         raise ValueError("keep_prob must be in (0, 1].")
 
     drop_rate = 1.0 - keep_prob
-    
-    # Input layer
+
     inputs = K.Input(shape=(nx,))
     x = inputs
 
     for i, (units, act) in enumerate(zip(layers, activations)):
         x = K.layers.Dense(units=units,
-                          activation=act,
-                          kernel_regularizer=K.regularizers.l2(lambtha))(x)
+                           activation=act,
+                           kernel_regularizer=K.regularizers.l2(lambtha))(x)
 
         if i < len(layers) - 1 and drop_rate > 0:
             x = K.layers.Dropout(rate=drop_rate)(x)
