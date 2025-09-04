@@ -15,14 +15,18 @@ def build_model(nx, layers, activations, lambtha, keep_prob):
 
     for i, (units, act) in enumerate(zip(layers, activations)):
         if i == 0:
-            model.add(K.layers.Dense(units=units,
-                                    activation=act,
-                                    kernel_regularizer=K.regularizers.l2(lambtha),
-                                    input_shape=(nx,)))
+            model.add(
+                K.layers.Dense(units=units,
+                               activation=act,
+                               kernel_regularizer=K.regularizers.l2(lambtha),
+                               input_shape=(nx,))
+            )
         else:
-            model.add(K.layers.Dense(units=units,
-                                    activation=act,
-                                    kernel_regularizer=K.regularizers.l2(lambtha)))
+            model.add(
+                K.layers.Dense(units=units,
+                               activation=act,
+                               kernel_regularizer=K.regularizers.l2(lambtha))
+            )
 
         if i < len(layers) - 1 and drop_rate > 0:
             model.add(K.layers.Dropout(rate=drop_rate))
