@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-
+"""Module for building neural network with Keras functional API."""
 import tensorflow.keras as K
 
 
