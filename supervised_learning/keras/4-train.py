@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-
+"""Module for training a Keras model using mini-batch gradient descent."""
 import tensorflow.keras as K
 
 
