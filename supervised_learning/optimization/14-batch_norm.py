@@ -13,12 +13,12 @@ def create_batch_norm_layer(prev, n, activation):
         use_bias=False
     )(prev)
 
-    activated = activation(dense)
-
     batch_norm = tf.keras.layers.BatchNormalization(
         epsilon=1e-7,
         gamma_initializer='ones',
         beta_initializer='zeros'
-    )(activated)
+    )(dense)
 
-    return batch_norm
+    activated = activation(batch_norm)
+
+    return activated
