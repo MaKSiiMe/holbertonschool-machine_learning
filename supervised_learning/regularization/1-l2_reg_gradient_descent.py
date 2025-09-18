@@ -24,4 +24,3 @@ def l2_reg_gradient_descent(Y, weights, cache, alpha, lambtha, L):
 
         weights[f'W{layer}'] -= alpha * dW
         weights[f'b{layer}'] -= alpha * db
-        dZ = dA_prev * (1 - A_prev**2)
