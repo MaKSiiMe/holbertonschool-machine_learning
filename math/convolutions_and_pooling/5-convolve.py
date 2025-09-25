@@ -10,8 +10,8 @@ def convolve(images, kernels, padding='same', stride=(1, 1)):
     sh, sw = stride
 
     if padding == 'same':
-        ph = ((h - 1) * sh + kh - h) // 2
-        pw = ((w - 1) * sw + kw - w) // 2
+        ph = max((h - 1) * sh + kh - h, 0) // 2
+        pw = max((w - 1) * sw + kw - w, 0) // 2
     elif padding == 'valid':
         ph = pw = 0
     else:
