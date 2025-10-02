@@ -19,7 +19,7 @@ def conv_forward(A_prev, W, b, activation, padding="same", stride=(1, 1)):
 
     if ph > 0 or pw > 0:
         A_padded = np.pad(A_prev, ((0, 0), (ph, ph), (pw, pw), (0, 0)),
-                         mode='constant', constant_values=0)
+                          mode='constant', constant_values=0)
     else:
         A_padded = A_prev
 
@@ -36,7 +36,7 @@ def conv_forward(A_prev, W, b, activation, padding="same", stride=(1, 1)):
                 start_j = j * sw
                 Z[:, i, j, k] = np.sum(
                     A_padded[:, start_i:start_i+kh,
-                            start_j:start_j+kw, :] *
+                             start_j:start_j+kw, :] *
                     W[:, :, :, k],
                     axis=(1, 2, 3)
                 )
