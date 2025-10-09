@@ -25,7 +25,7 @@ def densenet121(growth_rate=32, compression=1.0):
 
     # Initial layers: BN -> ReLU -> Conv 7x7 stride 2
     X = K.layers.BatchNormalization(axis=3)(X_input)
-    X = K.layers.Activation('relu')(X)
+    X = K.layers.ReLU()(X)
     X = K.layers.Conv2D(
         filters=2 * growth_rate,
         kernel_size=(7, 7),
@@ -64,7 +64,7 @@ def densenet121(growth_rate=32, compression=1.0):
 
     # Final layers: BN -> ReLU -> Global Average Pooling
     X = K.layers.BatchNormalization(axis=3)(X)
-    X = K.layers.Activation('relu')(X)
+    X = K.layers.ReLU()(X)
     X = K.layers.GlobalAveragePooling2D()(X)
 
     # Output layer: fully connected with 1000 classes
