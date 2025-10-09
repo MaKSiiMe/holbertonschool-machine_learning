@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Module for building a dense block"""
-import tensorflow.keras as K
+from tensorflow import keras as K
 
 
 def dense_block(X, nb_filters, growth_rate, layers):

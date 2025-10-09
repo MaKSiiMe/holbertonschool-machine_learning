@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Module for building an identity block"""
-import tensorflow.keras as K
+from tensorflow import keras as K
 
 
 def identity_block(A_prev, filters):

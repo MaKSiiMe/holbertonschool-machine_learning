@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Module for building an Inception block"""
 
-import tensorflow.keras as K
+from tensorflow import keras as K
 
 
 def inception_block(A_prev, filters):
