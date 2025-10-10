@@ -18,7 +18,7 @@ def densenet121(growth_rate=32, compression=1.0):
         the keras model
     """
     # He normal initializer with seed 0
-    initializer = K.initializers.HeNormal(seed=0)
+    he_init = K.initializers.he_normal(seed=0)
 
     # Input layer
     X_input = K.Input(shape=(224, 224, 3))
@@ -26,55 +26,33 @@ def densenet121(growth_rate=32, compression=1.0):
     # Initial layers: BN -> ReLU -> Conv 7x7 stride 2
     X = K.layers.BatchNormalization(axis=3)(X_input)
     X = K.layers.ReLU()(X)
-    X = K.layers.Conv2D(
-        filters=2 * growth_rate,
-        kernel_size=(7, 7),
-        strides=(2, 2),
-        padding='same',
-        kernel_initializer=initializer
-    )(X)
+    X = K.layers.Conv2D(2 * growth_rate, (7, 7), strides=(2, 2),
+                        padding='same', kernel_initializer=he_init)(X)
 
     # Max pooling: 3x3 stride 2
-    X = K.layers.MaxPooling2D(
-        pool_size=(3, 3),
-        strides=(2, 2),
-        padding='same'
-    )(X)
+    X = K.layers.MaxPooling2D(pool_size=(3, 3), strides=(2, 2),
+                              padding='same')(X)
 
     # Initial number of filters
     nb_filters = 2 * growth_rate
 
-    # Dense Block 1: 6 layers
+    # Dense blocks + transitions: (6, 12, 24, 16)
     X, nb_filters = dense_block(X, nb_filters, growth_rate, 6)
-    # Transition Layer 1
     X, nb_filters = transition_layer(X, nb_filters, compression)
 
-    # Dense Block 2: 12 layers
     X, nb_filters = dense_block(X, nb_filters, growth_rate, 12)
-    # Transition Layer 2
     X, nb_filters = transition_layer(X, nb_filters, compression)
 
-    # Dense Block 3: 24 layers
     X, nb_filters = dense_block(X, nb_filters, growth_rate, 24)
-    # Transition Layer 3
     X, nb_filters = transition_layer(X, nb_filters, compression)
 
-    # Dense Block 4: 16 layers (no transition after)
     X, nb_filters = dense_block(X, nb_filters, growth_rate, 16)
 
-    # Final layers: BN -> ReLU -> Global Average Pooling
+    # Final layers: BN -> ReLU -> Global Average Pooling -> FC 1000 softmax
     X = K.layers.BatchNormalization(axis=3)(X)
     X = K.layers.ReLU()(X)
     X = K.layers.GlobalAveragePooling2D()(X)
+    outputs = K.layers.Dense(1000, activation='softmax',
+                             kernel_initializer=he_init)(X)
 
-    # Output layer: fully connected with 1000 classes
-    X = K.layers.Dense(
-        units=1000,
-        activation='softmax',
-        kernel_initializer=initializer
-    )(X)
-
-    # Create model
-    model = K.Model(inputs=X_input, outputs=X)
-
-    return model
+    return K.Model(inputs=X_input, outputs=outputs)
