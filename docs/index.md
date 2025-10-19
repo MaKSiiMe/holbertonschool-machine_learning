@@ -1,6 +1,6 @@
 # From 87% to 92%: A Deep Dive into Optimizing Transfer Learning for CIFAR-10
 
-**By Maxime** (with assistance from Gemini)  
+**By Maxime**  
 *Published on: October 19, 2025*
 
 ---
@@ -42,7 +42,7 @@ Transfer learning addresses this problem by reusing knowledge from a network tra
 3. Adding new trainable layers on top
 4. Training these new layers on the target dataset
 
-A final fine-tuning step optionally unfreezes part of the base model and trains it with a low learning rate. [GeeksforGeeks](https://www.geeksforgeeks.org/what-is-transfer-learning/) succinctly describes transfer learning as repurposing a model trained on one task to serve as the foundation for a second, related task.
+A final fine-tuning step optionally unfreezes part of the base model and trains it with a low learning rate.
 
 ---
 
@@ -54,8 +54,8 @@ Our experimental framework was built in Python using TensorFlow with the Keras A
 ### Dataset
 
 The **CIFAR-10 dataset** was used, split into:
-- **Training**: 45,000 images
-- **Validation**: 5,000 images
+- **Training**: 50,000 images
+- **Validation**: 10,000 images
 - **Testing**: 10,000 images
 
 **Preprocessing pipeline**:
