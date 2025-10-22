@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
-"""
-0. Initialize Yolo
-"""
+"""0. Initialize Yolo"""
 from tensorflow import keras as K
 
 
