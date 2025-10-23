@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""4. Load images"""
+"""5. Preprocess images"""
 import tensorflow.keras as K
 import numpy as np
 import os
@@ -176,3 +176,31 @@ class Yolo:
                     image_paths.append(filepath)
 
         return images, image_paths
+
+    def preprocess_images(self, images):
+        """
+        Preprocess images for the Darknet model
+        Args:
+            images: list of images as numpy.ndarrays
+        Returns:
+            tuple of (pimages, image_shapes):
+                pimages: numpy.ndarray of shape (ni, input_h, input_w, 3)
+                image_shapes: numpy.ndarray of shape (ni, 2)
+        """
+        input_h = self.model.input.shape[1]
+        input_w = self.model.input.shape[2]
+
+        pimages = []
+        image_shapes = []
+
+        for image in images:
+            image_shapes.append([image.shape[0], image.shape[1]])
+            resized = cv2.resize(image, (input_w, input_h),
+                                 interpolation=cv2.INTER_CUBIC)
+            rescaled = resized / 255.0
+            pimages.append(rescaled)
+
+        pimages = np.array(pimages)
+        image_shapes = np.array(image_shapes)
+
+        return pimages, image_shapes
