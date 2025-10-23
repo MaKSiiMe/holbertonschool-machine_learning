@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""2. Filter Boxes"""
+"""3. Non-max Suppression"""
 import tensorflow.keras as K
 import numpy as np
 
@@ -83,24 +83,86 @@ class Yolo:
         box_scores = []
 
         for i in range(len(boxes)):
-            # Calculate box scores: confidence * class probability
             scores = box_confidences[i] * box_class_probs[i]
-
-            # Get the class with max probability for each box
             box_class = np.argmax(scores, axis=-1)
             box_score = np.max(scores, axis=-1)
-
-            # Create mask for boxes above threshold
             mask = box_score >= self.class_t
-
-            # Filter boxes, classes, and scores
             filtered_boxes.append(boxes[i][mask])
             box_classes.append(box_class[mask])
             box_scores.append(box_score[mask])
 
-        # Concatenate all filtered results
         filtered_boxes = np.concatenate(filtered_boxes, axis=0)
         box_classes = np.concatenate(box_classes, axis=0)
         box_scores = np.concatenate(box_scores, axis=0)
 
         return (filtered_boxes, box_classes, box_scores)
+
+    def non_max_suppression(self, filtered_boxes, box_classes, box_scores):
+        """
+        Apply Non-Maximum Suppression
+        """
+        box_predictions = []
+        predicted_box_classes = []
+        predicted_box_scores = []
+
+        # Process each class separately
+        unique_classes = np.unique(box_classes)
+
+        for cls in unique_classes:
+            # Get indices for current class
+            idx = np.where(box_classes == cls)
+
+            # Get boxes, scores for current class
+            class_boxes = filtered_boxes[idx]
+            class_scores = box_scores[idx]
+
+            # Sort by score (descending)
+            sorted_idx = np.argsort(class_scores)[::-1]
+            class_boxes = class_boxes[sorted_idx]
+            class_scores = class_scores[sorted_idx]
+
+            keep_boxes = []
+            keep_scores = []
+
+            while len(class_boxes) > 0:
+                keep_boxes.append(class_boxes[0])
+                keep_scores.append(class_scores[0])
+
+                if len(class_boxes) == 1:
+                    break
+
+                # Calculate IoU with remaining boxes
+                x1 = np.maximum(class_boxes[0, 0], class_boxes[1:, 0])
+                y1 = np.maximum(class_boxes[0, 1], class_boxes[1:, 1])
+                x2 = np.minimum(class_boxes[0, 2], class_boxes[1:, 2])
+                y2 = np.minimum(class_boxes[0, 3], class_boxes[1:, 3])
+
+                # Calculate intersection area
+                intersection = np.maximum(0, x2 - x1) * np.maximum(0, y2 - y1)
+
+                # Calculate union area
+                box1_area = ((class_boxes[0, 2] - class_boxes[0, 0]) *
+                             (class_boxes[0, 3] - class_boxes[0, 1]))
+                box2_area = ((class_boxes[1:, 2] - class_boxes[1:, 0]) *
+                             (class_boxes[1:, 3] - class_boxes[1:, 1]))
+                union = box1_area + box2_area - intersection
+
+                # Calculate IoU
+                iou = intersection / union
+
+                # Keep boxes with IoU below threshold
+                keep_mask = iou < self.nms_t
+                class_boxes = class_boxes[1:][keep_mask]
+                class_scores = class_scores[1:][keep_mask]
+
+            if len(keep_boxes) > 0:
+                box_predictions.append(np.array(keep_boxes))
+                predicted_box_classes.append(np.full(len(keep_boxes), cls))
+                predicted_box_scores.append(np.array(keep_scores))
+
+        # Concatenate all results
+        box_predictions = np.concatenate(box_predictions, axis=0)
+        predicted_box_classes = np.concatenate(predicted_box_classes, axis=0)
+        predicted_box_scores = np.concatenate(predicted_box_scores, axis=0)
+
+        return (box_predictions, predicted_box_classes, predicted_box_scores)
