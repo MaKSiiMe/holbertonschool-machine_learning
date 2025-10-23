@@ -196,7 +196,7 @@ class Yolo:
         for image in images:
             image_shapes.append([image.shape[0], image.shape[1]])
             resized = cv2.resize(image, (input_w, input_h),
-                                 interpolation=cv2.INTER_CUBIC)
+                                 interpolation=cv2.INTER_LINEAR)
             rescaled = resized / 255.0
             pimages.append(rescaled)
 
