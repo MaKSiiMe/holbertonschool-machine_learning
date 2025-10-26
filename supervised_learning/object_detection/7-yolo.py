@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""6. Show boxes"""
+"""7. Predict"""
 import tensorflow.keras as K
 import numpy as np
 import os
@@ -207,32 +207,71 @@ class Yolo:
             box = boxes[i]
             x1, y1, x2, y2 = int(box[0]), int(box[1]), int(box[2]), int(box[3])
             
-            # Draw blue box with thickness 2
             cv2.rectangle(image, (x1, y1), (x2, y2), (255, 0, 0), 2)
             
-            # Prepare text with class name and score
             class_name = self.class_names[int(box_classes[i])]
             score = box_scores[i]
             text = "{} {:.2f}".format(class_name, score)
             
-            # Draw red text 5 pixels above the top left corner
             cv2.putText(image, text, (x1, y1 - 5), 
                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 
                        1, cv2.LINE_AA)
         
-        # Display the image
         cv2.imshow(file_name, image)
         key = cv2.waitKey(0)
         
-        # If 's' key is pressed, save the image
         if key == ord('s'):
-            # Create detections directory if it doesn't exist
             if not os.path.exists('detections'):
                 os.makedirs('detections')
             
-            # Save the image
             save_path = os.path.join('detections', os.path.basename(file_name))
             cv2.imwrite(save_path, image)
         
-        # Close the window
         cv2.destroyAllWindows()
+
+
+    def predict(self, folder_path):
+        """
+        Make predictions on all images in a folder
+        """
+        # Load images from folder
+        images, image_paths = self.load_images(folder_path)
+        
+        # Preprocess images
+        pimages, image_shapes = self.preprocess_images(images)
+        
+        # Get predictions from model
+        outputs = self.model.predict(pimages)
+        
+        predictions = []
+        
+        # Process each image
+        for i in range(len(images)):
+            # Get outputs for current image
+            image_outputs = [output[i] for output in outputs]
+            
+            # Process outputs
+            boxes, box_confidences, box_class_probs = self.process_outputs(
+                image_outputs, image_shapes[i]
+            )
+            
+            # Filter boxes
+            boxes, box_classes, box_scores = self.filter_boxes(
+                boxes, box_confidences, box_class_probs
+            )
+            
+            # Apply non-maximum suppression
+            boxes, box_classes, box_scores = self.non_max_suppression(
+                boxes, box_classes, box_scores
+            )
+            
+            # Store predictions
+            predictions.append((boxes, box_classes, box_scores))
+            
+            # Get filename without full path for window name
+            filename = os.path.basename(image_paths[i])
+            
+            # Display image with boxes
+            self.show_boxes(images[i], boxes, box_classes, box_scores, filename)
+        
+        return predictions, image_paths
