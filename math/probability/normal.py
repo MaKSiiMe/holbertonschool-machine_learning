@@ -24,10 +24,10 @@ class Normal:
                 raise TypeError("data must be a list")
             if len(data) < 2:
                 raise ValueError("data must contain multiple values")
-            
+
             # Calculate mean
             self.mean = float(sum(data) / len(data))
-            
+
             # Calculate standard deviation
             variance = sum((x - self.mean) ** 2 for x in data) / len(data)
             self.stddev = float(variance ** 0.5)
@@ -68,12 +68,12 @@ class Normal:
         """
         pi = 3.1415926536
         e = 2.7182818285
-        
+
         # Calculate PDF: (1 / (σ√(2π))) * e^(-((x-μ)²) / (2σ²))
         coefficient = 1 / (self.stddev * ((2 * pi) ** 0.5))
         exponent = -(((x - self.mean) ** 2) / (2 * (self.stddev ** 2)))
         pdf_value = coefficient * (e ** exponent)
-        
+
         return pdf_value
 
     def cdf(self, x):
@@ -87,15 +87,15 @@ class Normal:
             CDF value for x
         """
         pi = 3.1415926536
-        
+
         # Calculate z-score
         z = (x - self.mean) / (self.stddev * (2 ** 0.5))
-        
+
         # Approximate erf using Taylor series
-        erf = (2 / (pi ** 0.5)) * (z - (z ** 3) / 3 + (z ** 5) / 10 - 
-                                     (z ** 7) / 42 + (z ** 9) / 216)
-        
+        erf = (2 / (pi ** 0.5)) * (z - (z ** 3) / 3 + (z ** 5) / 10 -
+                                       (z ** 7) / 42 + (z ** 9) / 216)
+
         # Calculate CDF: 0.5 * (1 + erf((x - μ) / (σ√2)))
         cdf_value = 0.5 * (1 + erf)
-        
+
         return cdf_value

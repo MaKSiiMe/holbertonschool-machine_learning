@@ -26,20 +26,20 @@ class Binomial:
                 raise TypeError("data must be a list")
             if len(data) < 2:
                 raise ValueError("data must contain multiple values")
-            
+
             # Calculate mean and variance
             mean = sum(data) / len(data)
             variance = sum((x - mean) ** 2 for x in data) / len(data)
-            
+
             # For binomial: variance = n*p*(1-p) and mean = n*p
             # So: p = 1 - (variance/mean)
             # And: n = mean/p
             p_estimate = 1 - (variance / mean)
             n_estimate = mean / p_estimate
-            
+
             # Round n to nearest integer
             self.n = round(n_estimate)
-            
+
             # Recalculate p with rounded n for better accuracy
             self.p = float(mean / self.n)
 
@@ -56,25 +56,26 @@ class Binomial:
         k = int(k)
         if k < 0 or k > self.n:
             return 0
-        
+
         # Calculate binomial coefficient C(n,k) = n! / (k! * (n-k)!)
         n_factorial = 1
         for i in range(1, self.n + 1):
             n_factorial *= i
-        
+
         k_factorial = 1
         for i in range(1, k + 1):
             k_factorial *= i
-        
+
         nk_factorial = 1
         for i in range(1, self.n - k + 1):
             nk_factorial *= i
-        
+
         binomial_coeff = n_factorial / (k_factorial * nk_factorial)
-        
+
         # Calculate PMF: C(n,k) * p^k * (1-p)^(n-k)
-        pmf_value = binomial_coeff * (self.p ** k) * ((1 - self.p) ** (self.n - k))
-        
+        pmf_value = (binomial_coeff * (self.p ** k) *
+                     ((1 - self.p) ** (self.n - k)))
+
         return pmf_value
 
     def cdf(self, k):
@@ -90,10 +91,10 @@ class Binomial:
         k = int(k)
         if k < 0:
             return 0
-        
+
         # Calculate CDF: sum of PMF from 0 to k
         cdf_value = 0
         for i in range(k + 1):
             cdf_value += self.pmf(i)
-        
+
         return cdf_value
