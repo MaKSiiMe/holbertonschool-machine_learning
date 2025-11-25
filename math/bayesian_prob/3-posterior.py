@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """Module for calculating posterior probability"""
 import numpy as np
-from math import factorial
 
 
 def posterior(x, n, P, Pr):
@@ -53,7 +52,19 @@ def posterior(x, n, P, Pr):
     if not np.isclose(np.sum(Pr), 1):
         raise ValueError("Pr must sum to 1")
 
-    binomial_coeff = factorial(n) / (factorial(x) * factorial(n - x))
+    n_fact = 1
+    for i in range(1, n + 1):
+        n_fact *= i
+
+    x_fact = 1
+    for i in range(1, x + 1):
+        x_fact *= i
+
+    nx_fact = 1
+    for i in range(1, n - x + 1):
+        nx_fact *= i
+
+    binomial_coeff = n_fact / (x_fact * nx_fact)
 
     likelihood = binomial_coeff * (P ** x) * ((1 - P) ** (n - x))
     intersection = likelihood * Pr

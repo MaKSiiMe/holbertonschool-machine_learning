@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """Module for calculating likelihood"""
 import numpy as np
-from math import factorial
 
 
 def likelihood(x, n, P):
@@ -41,7 +40,19 @@ def likelihood(x, n, P):
     if np.any((P < 0) | (P > 1)):
         raise ValueError("All values in P must be in the range [0, 1]")
 
-    binomial_coeff = factorial(n) / (factorial(x) * factorial(n - x))
+    n_fact = 1
+    for i in range(1, n + 1):
+        n_fact *= i
+
+    x_fact = 1
+    for i in range(1, x + 1):
+        x_fact *= i
+
+    nx_fact = 1
+    for i in range(1, n - x + 1):
+        nx_fact *= i
+
+    binomial_coeff = n_fact / (x_fact * nx_fact)
 
     likelihood_values = binomial_coeff * (P ** x) * ((1 - P) ** (n - x))
 
