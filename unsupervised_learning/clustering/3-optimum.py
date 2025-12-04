@@ -8,7 +8,7 @@ variance = __import__('2-variance').variance
 
 def optimum_k(X, kmin=1, kmax=None, iterations=1000):
     """
-    Tests for the optimum number of clusters by variance.
+    Tests the optimum number of clusters by variance.
 
     Args:
         X: numpy.ndarray of shape (n, d) containing the data set
@@ -16,25 +16,22 @@ def optimum_k(X, kmin=1, kmax=None, iterations=1000):
               (inclusive)
         kmax: positive integer, maximum number of clusters to check
               (inclusive)
-        iterations: positive integer, max iterations for K-means
+        iterations: positive integer, max iterations with K-means
 
     Returns:
-        results: list containing outputs of K-means for each cluster size
+        results: list containing outputs of K-means per cluster size
         d_vars: list containing difference in variance from smallest
                 cluster size
         or None, None on failure
     """
-    # Validate X
     if not isinstance(X, np.ndarray) or X.ndim != 2:
         return None, None
 
     n, d = X.shape
 
-    # Set default kmax
     if kmax is None:
         kmax = n
 
-    # Validate kmin, kmax, iterations
     if not isinstance(kmin, int) or kmin <= 0:
         return None, None
     if not isinstance(kmax, int) or kmax <= 0:
@@ -47,7 +44,6 @@ def optimum_k(X, kmin=1, kmax=None, iterations=1000):
     results = []
     variances = []
 
-    # Run K-means for each k value
     for k in range(kmin, kmax + 1):
         C, clss = kmeans(X, k, iterations)
         if C is None or clss is None:
@@ -55,7 +51,6 @@ def optimum_k(X, kmin=1, kmax=None, iterations=1000):
         results.append((C, clss))
         variances.append(variance(X, C))
 
-    # Calculate difference in variance from smallest cluster size (kmin)
     var_kmin = variances[0]
     d_vars = [var_kmin - var for var in variances]
 
