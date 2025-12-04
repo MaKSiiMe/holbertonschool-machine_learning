@@ -10,7 +10,8 @@ def pdf(X, m, S):
 
     Args:
         X: numpy.ndarray of shape (n, d) containing data points
-        m: numpy.ndarray of shape (d,) containing the mean of the distribution
+        m: numpy.ndarray of shape (d,) containing the mean of the
+           distribution
         S: numpy.ndarray of shape (d, d) containing the covariance matrix
 
     Returns:

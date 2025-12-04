@@ -12,8 +12,10 @@ def optimum_k(X, kmin=1, kmax=None, iterations=1000):
 
     Args:
         X: numpy.ndarray of shape (n, d) containing the data set
-        kmin: positive integer, minimum number of clusters to check (inclusive)
-        kmax: positive integer, maximum number of clusters to check (inclusive)
+        kmin: positive integer, minimum number of clusters to check
+              (inclusive)
+        kmax: positive integer, maximum number of clusters to check
+              (inclusive)
         iterations: positive integer, max iterations for K-means
 
     Returns:

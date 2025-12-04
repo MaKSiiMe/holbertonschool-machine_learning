@@ -10,12 +10,14 @@ def maximization(X, g):
 
     Args:
         X: numpy.ndarray of shape (n, d) containing the data set
-        g: numpy.ndarray of shape (k, n) containing posterior probabilities
+        g: numpy.ndarray of shape (k, n) containing the posterior
+           probabilities for each data point in each cluster
 
     Returns:
         pi: numpy.ndarray of shape (k,) containing updated priors
         m: numpy.ndarray of shape (k, d) containing updated centroid means
-        S: numpy.ndarray of shape (k, d, d) containing updated covariance matrices
+        S: numpy.ndarray of shape (k, d, d) containing updated covariance
+           matrices
         or None, None, None on failure
     """
     # Validate inputs
@@ -51,8 +53,7 @@ def maximization(X, g):
     for i in range(k):
         # X_centered: (n, d)
         X_centered = X - m[i]
-        # Weighted covariance: (d, n) @ diag(g[i]) @ (n, d) / N_k[i]
-        # Equivalent to: sum(g[i, j] * outer(X_centered[j], X_centered[j])) / N_k[i]
+        # Weighted covariance
         S[i] = np.dot(g[i] * X_centered.T, X_centered) / N_k[i]
 
     return pi, m, S
