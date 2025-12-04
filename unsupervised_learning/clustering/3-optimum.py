@@ -20,7 +20,8 @@ def optimum_k(X, kmin=1, kmax=None, iterations=1000):
 
     Returns:
         results: list containing outputs of K-means for each cluster size
-        d_vars: list containing difference in variance from smallest cluster size
+        d_vars: list containing difference in variance from smallest
+                cluster size
         or None, None on failure
     """
     # Validate X
