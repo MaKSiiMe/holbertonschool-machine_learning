@@ -81,7 +81,7 @@ class BayesianOptimization:
         for _ in range(iterations):
             X_next, _ = self.acquisition()
 
-            if np.any(np.isclose(self.gp.X, X_next)):
+            if np.any(np.abs(self.gp.X - X_next) < 1e-8):
                 break
 
             Y_next = self.f(X_next)
