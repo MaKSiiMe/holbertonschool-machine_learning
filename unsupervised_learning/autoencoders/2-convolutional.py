@@ -22,31 +22,27 @@ def autoencoder(input_dims, filters, latent_dims):
         x = keras.layers.Conv2D(filters=f, kernel_size=(3, 3),
                                 activation='relu', padding='same')(x)
         x = keras.layers.MaxPooling2D(pool_size=(2, 2), padding='same')(x)
-    shape_before_flatten = keras.backend.int_shape(x)[1:]
-    x = keras.layers.Flatten()(x)
-    latent = keras.layers.Dense(units=int(keras.backend.prod(latent_dims)),
-                                activation='relu')(x)
-    latent = keras.layers.Reshape(latent_dims)(latent)
+    latent = x
     encoder = keras.Model(inputs=input_encoder, outputs=latent)
 
     # Decoder
-    input_decoder = keras.Input(shape=latent_dims)
-    x = keras.layers.Flatten()(input_decoder)
-    x = keras.layers.Dense(units=int(keras.backend.prod(shape_before_flatten)),
-                           activation='relu')(x)
-    x = keras.layers.Reshape(shape_before_flatten)(x)
-    for i, f in enumerate(reversed(filters)):
-        if i < len(filters) - 2:
-            x = keras.layers.Conv2D(filters=f, kernel_size=(3, 3),
-                                    activation='relu', padding='same')(x)
-            x = keras.layers.UpSampling2D(size=(2, 2))(x)
-        elif i == len(filters) - 2:
-            x = keras.layers.Conv2D(filters=f, kernel_size=(3, 3),
-                                    activation='relu', padding='valid')(x)
-            x = keras.layers.UpSampling2D(size=(2, 2))(x)
-        else:
-            x = keras.layers.Conv2D(filters=input_dims[-1], kernel_size=(3, 3),
-                                    activation='sigmoid', padding='same')(x)
+    input_decoder = keras.Input(shape=latent.shape[1:])
+    x = input_decoder
+    for f in reversed(filters):
+        x = keras.layers.Conv2D(filters=f, kernel_size=(3, 3),
+                                activation='relu', padding='same')(x)
+        x = keras.layers.UpSampling2D(size=(2, 2))(x)
+    # Dernière couche pour revenir au nombre de canaux d'entrée, sans upsampling
+    x = keras.layers.Conv2D(filters=input_dims[-1], kernel_size=(3, 3),
+                            activation='sigmoid', padding='same')(x)
+    # Ajustement de la taille de sortie si nécessaire
+    height_diff = x.shape[1] - input_dims[0]
+    width_diff = x.shape[2] - input_dims[1]
+    if height_diff > 0 or width_diff > 0:
+        x = keras.layers.Cropping2D(
+            ((height_diff // 2, height_diff - height_diff // 2),
+             (width_diff // 2, width_diff - width_diff // 2))
+        )(x)
     decoder = keras.Model(inputs=input_decoder, outputs=x)
 
     # Autoencoder
