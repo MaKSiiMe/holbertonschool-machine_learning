@@ -1,4 +1,6 @@
+#!/usr/bin/env python3
 import tensorflow.keras as keras
+
 
 def autoencoder(input_dims, hidden_layers, latent_dims, lambtha):
     """
@@ -6,7 +8,7 @@ def autoencoder(input_dims, hidden_layers, latent_dims, lambtha):
 
     Args:
         input_dims (int): dimension de l'entrée
-        hidden_layers (list): nb de noeuds pour chaque couche cachée de l'encodeur
+        hidden_layers (list): nb de node pour chaque hidden layer de l'encodeur
         latent_dims (int): dimension de l'espace latent
         lambtha (float): paramètre de régularisation L1
 
