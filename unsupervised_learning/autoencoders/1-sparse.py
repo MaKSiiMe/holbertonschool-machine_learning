@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""1. Sparse Autoencoder"""
 import tensorflow.keras as keras
 
 
