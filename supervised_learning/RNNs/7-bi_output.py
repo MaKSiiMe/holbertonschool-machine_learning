@@ -25,6 +25,12 @@ class BidirectionalCell:
         return h_next
 
     def backward(self, h_next, x_t):
+        """
+        Calcule l'état caché dans la direction arrière pour un pas de temps.
+        h_next: (m, h) état caché suivant
+        x_t: (m, i) entrée à l'instant t
+        Retourne: h_prev, l'état caché précédent
+        """
         concat = np.concatenate((h_next, x_t), axis=1)
         h_prev = np.tanh(np.matmul(concat, self.Whb) + self.bhb)
         return h_prev
