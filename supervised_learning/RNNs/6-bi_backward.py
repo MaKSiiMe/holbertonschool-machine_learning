@@ -14,6 +14,12 @@ class BidirectionalCell:
         self.by = np.zeros((1, o))
 
     def forward(self, h_prev, x_t):
+        """
+        Calcule l'état caché dans la direction avant pour un pas de temps.
+        h_prev: (m, h) état caché précédent
+        x_t: (m, i) entrée à l'instant t
+        Retourne: h_next, l'état caché suivant
+        """
         concat = np.concatenate((h_prev, x_t), axis=1)
         h_next = np.tanh(np.matmul(concat, self.Whf) + self.bhf)
         return h_next
