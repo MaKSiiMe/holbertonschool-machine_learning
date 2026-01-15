@@ -1,0 +1,29 @@
+#!/usr/bin/env python3
+import numpy as np
+
+
+class BidirectionalCell:
+    """Représente une cellule bidirectionnelle d'un RNN."""
+    def __init__(self, i, h, o):
+        """
+        i: dimension de l'entrée
+        h: dimension de l'état caché
+        o: dimension de la sortie
+        """
+        self.Whf = np.random.randn(i + h, h)
+        self.bhf = np.zeros((1, h))
+        self.Whb = np.random.randn(i + h, h)
+        self.bhb = np.zeros((1, h))
+        self.Wy = np.random.randn(2 * h, o)
+        self.by = np.zeros((1, o))
+
+    def forward(self, h_prev, x_t):
+        """
+        Calcule l'état caché dans la direction avant pour un pas de temps.
+        h_prev: (m, h) état caché précédent
+        x_t: (m, i) entrée à l'instant t
+        Retourne: h_next, le prochain état caché
+        """
+        concat = np.concatenate((h_prev, x_t), axis=1)
+        h_next = np.tanh(np.matmul(concat, self.Whf) + self.bhf)
+        return h_next
