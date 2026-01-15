@@ -27,12 +27,12 @@ class WGAN_GP(keras.Model):
         self.scal_shape = tf.convert_to_tensor(self.scal_shape)
 
         # define the generator loss and optimizer:
-        self.generator.loss = lambda fake_scores: -tf.math.reduce_mean(fake_scores)
+        self.generator.loss = lambda fake_scores: -tf.reduce_mean(fake_scores)
         self.generator.optimizer = keras.optimizers.Adam(learning_rate=self.learning_rate, beta_1=self.beta_1, beta_2=self.beta_2)
         self.generator.compile(optimizer=self.generator.optimizer, loss=self.generator.loss)
 
         # define the discriminator loss and optimizer:
-        self.discriminator.loss = lambda real_scores, fake_scores: tf.math.reduce_mean(real_scores) - tf.math.reduce_mean(fake_scores)
+        self.discriminator.loss = lambda real_scores, fake_scores: tf.reduce_mean(real_scores) - tf.reduce_mean(fake_scores)
         self.discriminator.optimizer = keras.optimizers.Adam(learning_rate=self.learning_rate, beta_1=self.beta_1, beta_2=self.beta_2)
         self.discriminator.compile(optimizer=self.discriminator.optimizer, loss=self.discriminator.loss)
 
@@ -78,7 +78,10 @@ class WGAN_GP(keras.Model):
                 gp = self.gradient_penalty(interpolated_samples)
                 new_discr_loss = discr_loss + self.lambda_gp * gp
             grads = tape.gradient(new_discr_loss, self.discriminator.trainable_variables)
-            grads_vars = [(g, v) for g, v in zip(grads, self.discriminator.trainable_variables) if g is not None]
+            grads_vars = [
+                (g, v) for g, v in zip(grads, self.discriminator.trainable_variables)
+                if g is not None
+            ]
             if grads_vars:
                 self.discriminator.optimizer.apply_gradients(grads_vars)
 
@@ -87,7 +90,10 @@ class WGAN_GP(keras.Model):
             fake_scores = self.discriminator(fake_samples, training=True)
             gen_loss = self.generator.loss(fake_scores)
         grads = tape.gradient(gen_loss, self.generator.trainable_variables)
-        grads_vars = [(g, v) for g, v in zip(grads, self.generator.trainable_variables) if g is not None]
+        grads_vars = [
+            (g, v) for g, v in zip(grads, self.generator.trainable_variables)
+            if g is not None
+        ]
         if grads_vars:
             self.generator.optimizer.apply_gradients(grads_vars)
 
