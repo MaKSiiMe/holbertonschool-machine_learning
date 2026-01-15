@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""8. Bidirectional RNN"""
 import numpy as np
 
 

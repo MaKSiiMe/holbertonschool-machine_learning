@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""3. LSTM Cell"""
 import numpy as np
 
 

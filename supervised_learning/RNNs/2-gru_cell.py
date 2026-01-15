@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""2. GRU Cell"""
 import numpy as np
 
 

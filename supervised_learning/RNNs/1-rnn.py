@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""1. RNN"""
 import numpy as np
 
 

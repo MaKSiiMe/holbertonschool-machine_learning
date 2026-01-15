@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""4. Deep RNN"""
 import numpy as np
 
 

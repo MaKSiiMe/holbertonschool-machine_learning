@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""5. Bidirectional Cell Forward"""
 import numpy as np
 
 

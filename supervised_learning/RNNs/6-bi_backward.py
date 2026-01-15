@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""6. Bidirectional Cell Backward"""
 import numpy as np
 
 
