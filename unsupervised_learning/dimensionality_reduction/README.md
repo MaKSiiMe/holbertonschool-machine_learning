@@ -1,3 +1,3 @@
 # holbertonschool-machine_learning
-## supervised_learning
+## unsupervised_learning
 ### dimensionality_reduction
