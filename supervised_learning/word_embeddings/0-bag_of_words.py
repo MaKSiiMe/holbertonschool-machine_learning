@@ -14,7 +14,7 @@ def bag_of_words(sentences, vocab=None):
 
 	Returns:
 	- embeddings: numpy.ndarray of shape (s, f)
-	- features: list of features used (lowercased)
+	- features: numpy.ndarray of features used (lowercased)
 	"""
 	# Tokenize sentences to lowercase words
 	if vocab is None:
@@ -46,5 +46,8 @@ def bag_of_words(sentences, vocab=None):
 		counts = Counter(words)
 		for j, feat in enumerate(features):
 			embeddings[i, j] = counts.get(feat, 0)
+
+	# convert features list to numpy array for consistent output formatting
+	features = np.array(features)
 
 	return embeddings, features
