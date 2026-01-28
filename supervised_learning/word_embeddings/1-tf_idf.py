@@ -18,11 +18,22 @@ def tf_idf(sentences, vocab=None):
 	"""
 	# Tokenize and decide features
 	if vocab is None:
+		# collect all unique words across sentences, ignore single-char tokens
 		features = sorted({
 			w for s in sentences for w in re.findall(r'\w+', s.lower())
+			if len(w) > 1
 		})
 	else:
-		features = [w.lower() for w in vocab]
+		# normalize provided vocab, keep order, deduplicate and ignore single-char tokens
+		seen = set()
+		features = []
+		for w in vocab:
+			lw = w.lower()
+			if not re.fullmatch(r'\w+', lw) or len(lw) == 1:
+				continue
+			if lw not in seen:
+				seen.add(lw)
+				features.append(lw)
 
 	s = len(sentences)
 	f = len(features)
@@ -31,7 +42,8 @@ def tf_idf(sentences, vocab=None):
 	df_counts = np.zeros(f, dtype=int)
 	tokenized_sentences = []
 	for snt in sentences:
-		words = re.findall(r'\w+', snt.lower())
+		# Filter tokens of length 1 so TF matches features selection
+		words = [w for w in re.findall(r'\w+', snt.lower()) if len(w) > 1]
 		tokenized_sentences.append(words)
 		unique_words = set(words)
 		for j, feat in enumerate(features):
