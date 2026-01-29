@@ -24,6 +24,10 @@ def gensim_to_keras(model):
     if model is None or tf is None:
         return None
 
+    # Ensure tf.keras is available
+    if not hasattr(tf, "keras") or not hasattr(tf.keras, "layers"):
+        return None
+
     # accept Word2Vec model or KeyedVectors directly
     kv = getattr(model, "wv", model)
 
@@ -37,6 +41,9 @@ def gensim_to_keras(model):
 
     try:
         vectors = np.array(vectors, dtype=np.float32)
+        # reject invalid numeric values
+        if not np.isfinite(vectors).all():
+            return None
         if vectors.ndim != 2:
             return None
         vocab_size, vector_size = vectors.shape

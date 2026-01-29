@@ -15,7 +15,7 @@ def tf_idf(sentences, vocab=None):
 
     Returns:
     - embeddings: numpy.ndarray of shape (s, f)
-    - features: list of features used (lowercased)
+    - features: numpy.ndarray of features used (lowercased)
     """
     # Tokenize and decide features
     if vocab is None:
@@ -77,4 +77,4 @@ def tf_idf(sentences, vocab=None):
     norms[norms == 0] = 1.0
     embeddings = embeddings / norms
 
-    return embeddings, features
+    return embeddings, np.array(features)

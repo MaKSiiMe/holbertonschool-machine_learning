@@ -19,22 +19,37 @@ def fasttext_model(sentences: List[Union[str, List[str]]],
 
     Args:
     - sentences: list de phrases (str) ou list de tokens (list[str])
-    - vector_size: dimension des embeddings
-    - min_count: min occurrences pour garder un mot
-    - negative: nombre d'échantillons négatifs
-    - window: fenêtre contextuelle
+    - vector_size: dimension des embeddings (int > 0)
+    - min_count: min occurrences pour garder un mot (int >= 0)
+    - negative: nombre d'échantillons négatifs (int >= 0)
+    - window: fenêtre contextuelle (int >= 0)
     - cbow: True => CBOW, False => Skip-gram
-    - epochs: nombre d'époques d'entraînement
-    - seed: graine aléatoire
-    - workers: threads pour l'entraînement
+    - epochs: nombre d'époques d'entraînement (int >= 0)
+    - seed: graine aléatoire (int)
+    - workers: threads pour l'entraînement (int >= 1)
 
     Returns:
-    - modèle FastText entraîné, ou None en cas d'erreur / si gensim absent
+    - modèle FastText entraîné, ou None en cas d'erreur / si gensim absent /
+      si paramètres invalides
     """
     if FastText is None:
         return None
     if not isinstance(sentences, list) or len(sentences) == 0:
         return None
+
+    # validate numeric parameters
+    if not (isinstance(vector_size, int) and vector_size > 0):
+        return None
+    for name, val, min_allowed in (
+        ("min_count", min_count, 0),
+        ("window", window, 0),
+        ("negative", negative, 0),
+        ("epochs", epochs, 0),
+        ("seed", seed, -2**63),
+        ("workers", workers, 1),
+    ):
+        if not isinstance(val, int) or val < min_allowed:
+            return None
 
     # Tokenisation: accepte chaînes ou listes de tokens
     tokenized = []
