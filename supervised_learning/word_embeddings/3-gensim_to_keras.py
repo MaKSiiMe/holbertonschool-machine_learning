@@ -1,10 +1,6 @@
 #!/usr/bin/env python3
 """ Convert a gensim Word2Vec/KeyedVectors model to a Keras Embedding layer."""
-import numpy as np
-try:
-    import tensorflow as tf
-except Exception:
-    tf = None
+import tensorflow as tf
 
 
 def gensim_to_keras(model):
@@ -21,7 +17,7 @@ def gensim_to_keras(model):
     Note: Indices used by the Embedding correspond to the order of
     model.wv.index_to_key (or model.index_to_key for KeyedVectors).
     """
-    if model is None or tf is None:
+    if model is None:
         return None
 
     # Ensure tf.keras is available
@@ -40,13 +36,34 @@ def gensim_to_keras(model):
         return None
 
     try:
-        vectors = np.array(vectors, dtype=np.float32)
+        vectors = tf.convert_to_tensor(vectors, dtype=tf.float32)
         # reject invalid numeric values
-        if not np.isfinite(vectors).all():
+        if not bool(tf.reduce_all(tf.math.is_finite(vectors)).numpy()):
             return None
-        if vectors.ndim != 2:
+        # if gensim provides an index order, ensure vectors follow it;
+        # if lengths mismatch, try to rebuild vectors in index_to_key order
+        idx_keys = getattr(kv, "index_to_key", None)
+        if idx_keys is not None:
+            try:
+                vec_count = vectors.shape[0]
+                if vec_count is None:
+                    vec_count = int(tf.shape(vectors)[0].numpy())
+                else:
+                    vec_count = int(vec_count)
+            except Exception:
+                vec_count = int(tf.shape(vectors)[0].numpy())
+            if len(idx_keys) != vec_count:
+                try:
+                    stacked = tf.stack([kv.get_vector(k) for k in idx_keys])
+                    vectors = tf.cast(stacked, tf.float32)
+                except Exception:
+                    return None
+        # ensure 2D
+        if tf.rank(vectors).numpy() != 2:
             return None
-        vocab_size, vector_size = vectors.shape
+        shape = tf.shape(vectors)
+        vocab_size = int(shape[0].numpy())
+        vector_size = int(shape[1].numpy())
         if vocab_size == 0 or vector_size == 0:
             return None
     except Exception:
@@ -54,10 +71,11 @@ def gensim_to_keras(model):
 
     # Create a trainable Embedding layer initialized with gensim weights
     try:
+        weights = vectors.numpy()
         emb_layer = tf.keras.layers.Embedding(
             input_dim=vocab_size,
             output_dim=vector_size,
-            embeddings_initializer=tf.keras.initializers.Constant(vectors),
+            embeddings_initializer=tf.keras.initializers.Constant(weights),
             trainable=True
         )
     except Exception:

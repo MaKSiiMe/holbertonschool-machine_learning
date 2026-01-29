@@ -1,15 +1,10 @@
 #!/usr/bin/env python3
 """ Word2Vec embedding implementation."""
-import re
-from typing import List, Union
 
-try:
-    from gensim.models import Word2Vec
-except Exception:
-    Word2Vec = None
+import gensim
 
 
-def word2vec_model(sentences: List[Union[str, List[str]]],
+def word2vec_model(sentences,
                    vector_size: int = 100, min_count: int = 5,
                    window: int = 5, negative: int = 5,
                    cbow: bool = True, epochs: int = 5,
@@ -32,8 +27,7 @@ def word2vec_model(sentences: List[Union[str, List[str]]],
     - modèle Word2Vec entraîné, ou None en cas d'erreur / si gensim absent / si
       paramètres invalides
     """
-    if Word2Vec is None:
-        return None
+    # gensim is required; let ImportError surface at import time
     if not isinstance(sentences, list) or len(sentences) == 0:
         return None
 
@@ -52,13 +46,15 @@ def word2vec_model(sentences: List[Union[str, List[str]]],
             return None
 
     # Tokenisation: accepte chaînes ou listes de tokens
+    cbow = bool(cbow)
     tokenized = []
     for s in sentences:
         if isinstance(s, str):
-            toks = re.findall(r'\w+', s.lower())
+            low = s.lower()
+            cleaned = ''.join(ch if ch.isalnum() else ' ' for ch in low)
+            toks = cleaned.split()
             tokenized.append(toks)
         elif isinstance(s, (list, tuple)):
-            # normalise en str lowercase
             toks = [str(t).lower() for t in s if str(t)]
             tokenized.append(toks)
         else:
@@ -71,6 +67,8 @@ def word2vec_model(sentences: List[Union[str, List[str]]],
 
     # Détermine le mode d'entraînement (sg=0 pour CBOW, sg=1 pour skip-gram)
     sg = 0 if cbow else 1
+
+    Word2Vec = gensim.models.Word2Vec
 
     try:
         model = Word2Vec(vector_size=vector_size, window=window,

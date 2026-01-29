@@ -1,15 +1,10 @@
 #!/usr/bin/env python3
 """ FastText embedding implementation."""
-import re
-from typing import List, Union
 
-try:
-    from gensim.models import FastText
-except Exception:
-    FastText = None
+import gensim
 
 
-def fasttext_model(sentences: List[Union[str, List[str]]],
+def fasttext_model(sentences,
                    vector_size: int = 100, min_count: int = 5,
                    negative: int = 5, window: int = 5,
                    cbow: bool = True, epochs: int = 5,
@@ -32,8 +27,7 @@ def fasttext_model(sentences: List[Union[str, List[str]]],
     - modèle FastText entraîné, ou None en cas d'erreur / si gensim absent /
       si paramètres invalides
     """
-    if FastText is None:
-        return None
+    # gensim is required; use gensim.models.FastText below
     if not isinstance(sentences, list) or len(sentences) == 0:
         return None
 
@@ -51,11 +45,13 @@ def fasttext_model(sentences: List[Union[str, List[str]]],
         if not isinstance(val, int) or val < min_allowed:
             return None
 
-    # Tokenisation: accepte chaînes ou listes de tokens
+    # Tokenisation: accepte chaînes ou listes de tokens (sans re)
     tokenized = []
     for s in sentences:
         if isinstance(s, str):
-            toks = re.findall(r'\w+', s.lower())
+            low = s.lower()
+            cleaned = ''.join(ch if ch.isalnum() else ' ' for ch in low)
+            toks = cleaned.split()
             tokenized.append(toks)
         elif isinstance(s, (list, tuple)):
             toks = [str(t).lower() for t in s if str(t)]
@@ -69,6 +65,8 @@ def fasttext_model(sentences: List[Union[str, List[str]]],
         return None
 
     sg = 0 if cbow else 1
+
+    FastText = gensim.models.FastText
 
     try:
         model = FastText(vector_size=vector_size, window=window,
