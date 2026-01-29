@@ -72,4 +72,9 @@ def tf_idf(sentences, vocab=None):
                 tf = c / total
                 embeddings[i, j] = tf * idf[j]
 
+    # normalize each sentence vector to unit L2 norm (avoid division by zero)
+    norms = np.linalg.norm(embeddings, axis=1, keepdims=True)
+    norms[norms == 0] = 1.0
+    embeddings = embeddings / norms
+
     return embeddings, features
