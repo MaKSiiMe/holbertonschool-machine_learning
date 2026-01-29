@@ -21,7 +21,8 @@ def fasttext_model(sentences, vector_size=100, min_count=5,
         workers: threads pour l'entraînement (int >= 1)
 
     Returns:
-        Le modèle FastText entraîné, ou None en cas d'erreur / si paramètres invalides.
+        Le modèle FastText entraîné, ou None en cas d'erreur.
+        Si les paramètres sont invalides, retourne None.
     """
     # gensim is required; use gensim.models.FastText below
     if not isinstance(sentences, list) or len(sentences) == 0:
@@ -69,7 +70,11 @@ def fasttext_model(sentences, vector_size=100, min_count=5,
                          min_count=min_count, negative=negative,
                          sg=sg, seed=seed, workers=workers)
         model.build_vocab(tokenized)
-        model.train(tokenized, total_examples=model.corpus_count, epochs=epochs)
+        model.train(
+            tokenized,
+            total_examples=model.corpus_count,
+            epochs=epochs,
+        )
     except Exception:
         return None
 
