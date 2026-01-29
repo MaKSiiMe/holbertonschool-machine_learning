@@ -4,28 +4,24 @@
 import gensim
 
 
-def word2vec_model(sentences,
-                   vector_size: int = 100, min_count: int = 5,
-                   window: int = 5, negative: int = 5,
-                   cbow: bool = True, epochs: int = 5,
-                   seed: int = 0, workers: int = 1):
-    """
-    Crée, construit et entraîne un modèle gensim Word2Vec.
+def word2vec_model(sentences, vector_size=100, min_count=5,
+                   window=5, negative=5, cbow=True, epochs=5,
+                   seed=0, workers=1):
+    """Crée, construit et entraîne un modèle gensim Word2Vec.
 
     Args:
-    - sentences: list de phrases (str) ou list de tokens (list[str])
-    - vector_size: dimension des embeddings (int > 0)
-    - min_count: min occurrences pour garder un mot (int >= 0)
-    - window: fenêtre contextuelle (int >= 0)
-    - negative: nombre d'échantillons négatifs (int >= 0)
-    - cbow: True => CBOW, False => Skip-gram
-    - epochs: nombre d'époques d'entraînement (int >= 0)
-    - seed: graine aléatoire (int)
-    - workers: threads pour l'entraînement (int >= 1)
+        sentences: list de phrases (str) ou list de tokens (list[str])
+        vector_size: dimension des embeddings (int > 0)
+        min_count: min occurrences pour garder un mot (int >= 0)
+        window: fenêtre contextuelle (int >= 0)
+        negative: nombre d'échantillons négatifs (int >= 0)
+        cbow: True => CBOW, False => Skip-gram
+        epochs: nombre d'époques d'entraînement (int >= 0)
+        seed: graine aléatoire (int)
+        workers: threads pour l'entraînement (int >= 1)
 
     Returns:
-    - modèle Word2Vec entraîné, ou None en cas d'erreur / si gensim absent / si
-      paramètres invalides
+        Le modèle Word2Vec entraîné, ou None en cas d'erreur / si paramètres invalides.
     """
     # gensim is required; let ImportError surface at import time
     if not isinstance(sentences, list) or len(sentences) == 0:
