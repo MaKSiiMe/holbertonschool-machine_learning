@@ -4,6 +4,16 @@ import math
 
 
 def _ngrams(sequence, n):
+    """Return a list of n-grams for a sequence.
+
+    Args:
+        sequence: list of tokens (words).
+        n: size of the n-gram (int).
+
+    Returns:
+        A list of n-grams as tuples. If `n` <= 0 or the sequence is shorter
+        than `n`, an empty list is returned.
+    """
     if n <= 0:
         return []
     L = len(sequence)
