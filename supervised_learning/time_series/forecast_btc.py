@@ -5,8 +5,10 @@ import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Dropout
 import matplotlib.pyplot as plt
+from sklearn.preprocessing import MinMaxScaler
 import joblib
 import os
+import math
 
 # --- PARAMÈTRES ---
 SEQ_LEN = 24       # Fenêtre de 24h
@@ -30,19 +32,59 @@ def create_dataset_windows(data, seq_len):
 
 
 def main():
-    # 1. Chargement
-    if not os.path.exists('preprocessed_btc.csv'):
-        print("Erreur: Lancez d'abord preprocess_data.py")
-        return
+    # 1. Chargement et feature engineering (on refait le preprocessing
+    #    ici pour pouvoir fitter le scaler sur le train uniquement)
+    print("--- Chargement des données brutes et feature engineering ---")
+    try:
+        df1 = pd.read_csv('coinbase.csv')
+        df2 = pd.read_csv('bitstamp.csv')
+    except FileNotFoundError:
+        # fallback to preprocessed file if raw csv not available
+        if not os.path.exists('preprocessed_btc.csv'):
+            print("Erreur: données brutes manquantes et preprocessed_btc.csv absent")
+            return
+        df = pd.read_csv('preprocessed_btc.csv', index_col=0, parse_dates=True)
+        data = df.values.astype('float32')
+        print("Utilisation du fichier preprocessed_btc.csv existant")
+        X, y = create_dataset_windows(data, SEQ_LEN)
+        # load scaler for inverse transform only
+        if os.path.exists('btc_scaler.save'):
+            scaler = joblib.load('btc_scaler.save')
+        else:
+            scaler = None
+        print("--- Création des séquences ---")
+        # continue to evaluation/training below
+    else:
+        df = pd.concat([df1, df2])
+        df['Timestamp'] = pd.to_datetime(df['Timestamp'], unit='s')
+        df = df.set_index('Timestamp')
+        df = df.sort_index()
+        keep_cols = ['Close', 'Volume_(BTC)']
+        df = df[keep_cols]
+        df_hourly = df.resample('h').mean()
+        df_hourly = df_hourly.ffill()
+        df_hourly['MA24'] = df_hourly['Close'].rolling(window=24).mean()
+        df_hourly = df_hourly.dropna()
 
-    print("--- Chargement des données ---")
-    df = pd.read_csv('preprocessed_btc.csv', index_col=0, parse_dates=True)
-    data = df.values.astype('float32')
-    scaler = joblib.load('btc_scaler.save')
+        # split by time so scaler is fit on train only
+        n_rows = len(df_hourly)
+        train_end = int(n_rows * 0.8)
+        val_end = int(n_rows * 0.9)
 
-    # 2. Préparation des fenêtres
-    print("--- Création des séquences ---")
-    X, y = create_dataset_windows(data, SEQ_LEN)
+        df_train = df_hourly.iloc[:train_end]
+        df_val = df_hourly.iloc[train_end:val_end]
+        df_test = df_hourly.iloc[val_end:]
+
+        scaler = MinMaxScaler()
+        scaler.fit(df_train.values)
+
+        data_scaled = scaler.transform(df_hourly.values).astype('float32')
+        # save scaler
+        joblib.dump(scaler, 'btc_scaler.save')
+
+        # create windows from scaled data
+        print("--- Création des séquences ---")
+        X, y = create_dataset_windows(data_scaled, SEQ_LEN)
 
     # 3. Split Chronologique (Train 80% / Val 10% / Test 10%)
     n = len(X)
@@ -98,43 +140,55 @@ def main():
     )
 
     # 5. Évaluation et Graphique
-    print("--- Génération du Graphique Final ---")
+    print("--- Génération du Graphique Final et diagnostics ---")
 
-    # On prend les 200 derniers points du Test Set pour y voir clair
     last_n = 200
     X_sample = X_test[-last_n:]
     y_sample_true = y_test[-last_n:]
 
-    # Prédiction
     preds = model.predict(X_sample, verbose=0)
 
-    # INVERSE TRANSFORM (C'est ici qu'on retrouve les vrais prix)
-    # Le scaler a besoin de 3 colonnes (Close, Volume, MA24), on crée une matrice dummy
     def inverse_prices(target_array, scaler):
         dummy = np.zeros((len(target_array), scaler.n_features_in_))
-        dummy[:, 0] = target_array.flatten()  # On met nos prix dans la colonne 0 (Close)
+        dummy[:, 0] = target_array.flatten()
         return scaler.inverse_transform(dummy)[:, 0]
 
     real_prices = inverse_prices(y_sample_true, scaler)
     predicted_prices = inverse_prices(preds, scaler)
 
-    # Lissage léger de la prédiction pour le visuel (Rolling mean sur 3 points)
-    predicted_smooth = pd.Series(predicted_prices).rolling(3, center=True, min_periods=1).mean()
+    # Diagnostics
+    mse = float(np.mean((predicted_prices - real_prices) ** 2))
+    mae = float(np.mean(np.abs(predicted_prices - real_prices)))
+    # R^2
+    ss_res = float(np.sum((real_prices - predicted_prices) ** 2))
+    ss_tot = float(np.sum((real_prices - np.mean(real_prices)) ** 2))
+    r2 = 1 - ss_res / ss_tot if ss_tot != 0 else float('nan')
 
-    # Plot
+    # Directional accuracy
+    true_delta = np.diff(real_prices)
+    pred_delta = np.diff(predicted_prices)
+    dir_acc = float(np.mean((np.sign(true_delta) == np.sign(pred_delta)).astype(float)))
+
+    print(f"MSE: {mse:.6f}")
+    print(f"MAE: {mae:.6f}")
+    print(f"R2: {r2:.6f}")
+    print(f"Direction accuracy: {dir_acc:.4f}")
+
+    # Plot without smoothing
     plt.figure(figsize=(12, 6))
-    plt.plot(real_prices, label='Prix Réel (USD)', color='blue', linewidth=1.5)
-    plt.plot(predicted_smooth, label='Prédiction (USD)', color='orange', linestyle='--', linewidth=1.5)
-    plt.title(f"Prédiction BTC vs Réalité (Zoom sur les {last_n} dernières heures)")
+    plt.plot(real_prices, label='Prix Réel (USD)', color='blue', linewidth=1.0)
+    plt.plot(predicted_prices, label='Prédiction (USD)', color='orange', linestyle='--', linewidth=1.0)
+    plt.title(f"Prédiction BTC vs Réalité (dernier {last_n} points) — sans lissage")
     plt.xlabel("Heures")
     plt.ylabel("Prix ($)")
     plt.legend()
     plt.grid(True, alpha=0.3)
+    plt.savefig('btc_prediction_graph_nosmooth.png')
 
-    plt.savefig('btc_prediction_graph.png')
+    # also save model
     model.save('btc_model.keras')
 
-    print("✅ Graphique sauvegardé : btc_prediction_graph.png")
+    print("✅ Graphique sauvegardé : btc_prediction_graph_nosmooth.png")
     print("✅ Modèle sauvegardé : btc_model.keras")
 
 
