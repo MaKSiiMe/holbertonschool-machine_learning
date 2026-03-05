@@ -47,14 +47,3 @@ def play(env, Q, max_steps=100):
     # ensure we return a native python float for consistency
     return float(total_reward), renders
 
-
-if __name__ == "__main__":
-    # simple demonstration using helper functions
-    load_env = __import__("0-load_env").load_frozen_lake
-    env = load_env(map_name="4x4", is_slippery=False)
-    # initialize a dummy Q-table with zeros
-    Q = np.zeros((env.observation_space.n, env.action_space.n))
-
-    reward, boards = play(env, Q)
-    print("Episode reward:", reward)
-    print("Rendered steps:", len(boards))
