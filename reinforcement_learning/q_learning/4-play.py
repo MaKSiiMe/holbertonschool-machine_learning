@@ -46,4 +46,3 @@ def play(env, Q, max_steps=100):
 
     # ensure we return a native python float for consistency
     return float(total_reward), renders
-
