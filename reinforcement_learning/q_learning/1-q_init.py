@@ -16,8 +16,18 @@ def q_init(env):
         available in the environment.
     """
 
-    # number of states from the observation space (assumed discrete)
-    n_states = env.observation_space.n
+    # number of states from the observation space (assumed discrete).
+    # ``FrozenLakeEnv`` correctly sets ``observation_space.n`` based on
+    # the underlying map, but some external code (or future gym versions)
+    # may occasionally misreport it.  In those cases we can fall back to
+    # the size of the transition dictionary ``P`` stored on the wrapped
+    # environment, which always has one entry per state.
+    try:
+        n_states = env.observation_space.n
+    except AttributeError:
+        # last resort: count entries in the transition matrix
+        n_states = len(env.unwrapped.P)
+
     # number of actions from the action space (assumed discrete)
     n_actions = env.action_space.n
 

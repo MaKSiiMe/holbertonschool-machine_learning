@@ -16,20 +16,19 @@ def play(env, Q, max_steps=100):
         max_steps (int): Maximum number of steps to execute in the episode.
 
     Returns:
-        tuple: ``(total_reward, renders)`` where ``total_reward`` is the sum
-            of rewards obtained during the episode and ``renders`` is a list
-            of the board representations produced by ``env.render()`` after
-            each step (including the initial and final states).
+        tuple: ``(total_reward, renders)`` where ``total_reward`` is the total
+            reward obtained (returned as a float) and ``renders`` is a list
+            of strings representing the board state after each step,
+            including the initial state.
     """
 
     state, _ = env.reset()
     total_reward = 0
     renders = []
 
-    # initial board
+    # capture the initial board state
     first = env.render()
     renders.append(first)
-    print(first)
 
     for _ in range(max_steps):
         # always exploit the Q-table
@@ -41,12 +40,12 @@ def play(env, Q, max_steps=100):
 
         out = env.render()
         renders.append(out)
-        print(out)
 
         if done:
             break
 
-    return total_reward, renders
+    # ensure we return a native python float for consistency
+    return float(total_reward), renders
 
 
 if __name__ == "__main__":

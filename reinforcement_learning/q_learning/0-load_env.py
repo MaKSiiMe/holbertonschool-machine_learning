@@ -27,5 +27,7 @@ def load_frozen_lake(desc=None, map_name=None, is_slippery=False):
         kwargs["desc"] = desc
     elif map_name is not None:
         kwargs["map_name"] = map_name
+    else:
+        kwargs["map_name"] = "8x8"
 
     return gym.make("FrozenLake-v1", **kwargs)
