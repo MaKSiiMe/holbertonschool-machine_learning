@@ -4,23 +4,23 @@ import numpy as np
 
 
 def td_lambtha(env, V, policy, lambtha, episodes=5000, max_steps=100,
-               alpha=0.1, gamma=0.9):
+               alpha=0.1, gamma=0.99):
     """Performs the TD(lambda) algorithm with eligibility traces"""
-    for _ in range(episodes):
+    for episode in range(episodes):
         state, _ = env.reset()
-        eligibility = np.zeros_like(V)
+        e = np.zeros(V.shape)
 
-        for _ in range(max_steps):
+        for step in range(max_steps):
             action = policy(state)
-            next_state, reward, terminated, truncated, _ = env.step(action)
+            new_state, reward, terminated, truncated, _ = env.step(action)
 
-            delta = reward + gamma * V[next_state] - V[state]
-            eligibility *= gamma * lambtha
-            eligibility[state] += 1
-            V += alpha * delta * eligibility
+            delta = reward + gamma * V[new_state] - V[state]
+            e = gamma * lambtha * e
+            e[state] += 1
+            V = V + alpha * delta * e
 
             if terminated or truncated:
                 break
-            state = next_state
+            state = new_state
 
     return V
