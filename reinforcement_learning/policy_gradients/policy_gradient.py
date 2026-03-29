@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+"""
+This module contains functions for computing policy gradients in reinforcement learning.
+"""
 
 import numpy as np
 
