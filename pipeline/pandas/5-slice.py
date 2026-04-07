@@ -3,5 +3,5 @@
 
 
 def slice(df):
-    """Return High/Low/Close/Volume_BTC columns every 60th row."""
-    return df[["High", "Low", "Close", "Volume_BTC"]].iloc[::60]
+    """Return High/Low/Close/Volume_(BTC) columns every 60th row."""
+    return df[["High", "Low", "Close", "Volume_(BTC)"]].iloc[::60]
