@@ -27,11 +27,12 @@ def sentientPlanets():
 
             homeworld = species.get("homeworld")
             if not homeworld:
-                planets.append("unknown")
                 continue
 
             homeworld_response = requests.get(homeworld, timeout=10)
-            planets.append(homeworld_response.json().get("name", "unknown"))
+            planet_name = homeworld_response.json().get("name")
+            if planet_name:
+                planets.append(planet_name)
 
         url = data.get("next")
 
