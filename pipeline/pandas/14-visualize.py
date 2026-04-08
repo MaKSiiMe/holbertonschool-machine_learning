@@ -34,5 +34,6 @@ def transform(df):
 
 
 df = transform(df)
+print(df)
 df.plot(figsize=(12, 8))
 plt.show()
