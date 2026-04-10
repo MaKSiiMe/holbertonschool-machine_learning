@@ -1,3 +1,4 @@
+-- Decrease item quantity after inserting an order
 DROP TRIGGER IF EXISTS decrease_item_quantity;
 
 DELIMITER $$

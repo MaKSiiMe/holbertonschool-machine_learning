@@ -1,3 +1,4 @@
+-- Reset valid_email when the email changes
 DROP TRIGGER IF EXISTS reset_valid_email;
 
 DELIMITER $$

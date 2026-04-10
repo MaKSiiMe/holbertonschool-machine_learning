@@ -1,3 +1,4 @@
+-- Create procedure AddBonus
 DROP PROCEDURE IF EXISTS AddBonus;
 
 DELIMITER $$

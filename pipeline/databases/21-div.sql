@@ -1,3 +1,4 @@
+-- Create SafeDiv function
 DROP FUNCTION IF EXISTS SafeDiv;
 
 DELIMITER $$
