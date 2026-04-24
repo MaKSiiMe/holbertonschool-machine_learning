@@ -5,5 +5,5 @@ import tensorflow as tf
 
 
 def crop_image(image, size):
-	"""Perform a random crop on an image tensor."""
-	return tf.image.random_crop(image, size=size)
+    """Perform a random crop on an image tensor."""
+    return tf.image.random_crop(image, size=size)

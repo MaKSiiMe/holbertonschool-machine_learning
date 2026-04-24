@@ -5,5 +5,5 @@ import tensorflow as tf
 
 
 def change_contrast(image, lower, upper):
-	"""Randomly adjust image contrast within [lower, upper]."""
-	return tf.image.random_contrast(image, lower=lower, upper=upper)
+    """Randomly adjust image contrast within [lower, upper]."""
+    return tf.image.random_contrast(image, lower=lower, upper=upper)
